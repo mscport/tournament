@@ -1,0 +1,2794 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Sporting Club - Live Portal</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places&callback=initAddressAutocomplete" async defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Hind+Siliguri:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        :root { --brand-color: #047857; --brand-dark: #064e3b; }
+        body { font-family: 'Inter', 'Hind Siliguri', sans-serif; background-color: #f8fafc; color: #0f172a; -webkit-tap-highlight-color: transparent; }
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05); }
+        .input-group label { display: flex; flex-direction: column; font-size: 0.875rem; font-weight: 600; color: #475569; margin-bottom: 0.5rem; }
+        .input-field { width: 100%; padding: 0.75rem 1rem; border: 1px solid #cbd5e1; border-radius: 0.5rem; background-color: #ffffff; transition: all 0.2s; font-size: 0.95rem; }
+        .input-field:focus { outline: none; border-color: var(--brand-color); box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.1); }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+        .a4-container { width: 210mm; min-height: 297mm; margin: 0 auto; background: white; padding: 20mm; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        #pdf-wrapper { width: 210mm; margin: 0 auto; background: transparent; }
+        
+        @media print {
+            body { background: white; }
+            #app-view, #admin-view, #payment-redirect-view { display: none !important; }
+            #pdf-wrapper { width: 100%; }
+            .a4-container { width: 100%; min-height: auto; margin: 0; padding: 0; box-shadow: none; }
+            .print-action-bar { display: none !important; }
+            .page-break-print { page-break-before: always; break-before: page; }
+            @page { size: A4; margin: 15mm; }
+        }
+
+        .batting-theme { background-color: #2e1065; color: #ffffff; }
+        .bowling-theme { background-color: #f1f5f9; color: #0f172a; }
+        .score-btn { background: white; border: 1px solid #cbd5e1; border-radius: 6px; font-weight: 700; font-size: 1rem; padding: 8px 4px; transition: 0.2s; text-align: center; cursor: pointer; color: #1e293b; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .score-btn:active { transform: scale(0.95); background: #e2e8f0; }
+        .score-btn.btn-w { color: #ea580c; border-color: #ea580c; background-color: #fff7ed;}
+        .score-btn.btn-n { color: #2563eb; border-color: #2563eb; background-color: #eff6ff;}
+        .score-btn.btn-b { color: #64748b; border-color: #64748b; background-color: #f8fafc;}
+        .score-btn.btn-out { background: #dc2626; color: white; border-color: #b91c1c; font-size: 1.1rem;}
+        .score-btn.btn-boundary { background: #047857; color: white; border-color: #047857; }
+        
+        #sync-status { transition: all 0.3s; }
+        .sync-active { color: #10b981; }
+        .sync-offline { color: #ef4444; }
+        
+        /* Fullscreen overrides */
+        .fs-container:-webkit-full-screen { width: 100vw; height: 100vh; overflow-y: auto; background-color: #ffffff; }
+        .fs-container:fullscreen { width: 100vw; height: 100vh; overflow-y: auto; background-color: #ffffff; }
+        body.theme-violet .fs-container:-webkit-full-screen { background-color: #170f2e; }
+        body.theme-violet .fs-container:fullscreen { background-color: #170f2e; }
+        
+        /* =========================================
+   DYNAMIC THEMES (PREMIUM & DEEP VIOLET)
+   ========================================= */
+
+        /* 1. STANDARD PREMIUM THEME (Public/Logged Out) */
+        body.theme-premium {
+            background: linear-gradient(135deg, #f0fdf4 0%, #e2e8f0 100%) !important;
+        }
+        body.theme-premium .glass-card {
+            background: rgba(255, 255, 255, 0.90) !important;
+            box-shadow: 0 20px 40px -5px rgba(4, 120, 87, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.8) !important;
+        }
+
+        /* 2. DEEP VIOLET THEME (Admin/Logged In) */
+        body.theme-violet {
+            background: #170f2e !important; /* Deep Violet Base Background */
+            color: #e9d5ff !important;
+        }
+        body.theme-violet header {
+            background-color: #2e1065 !important;
+            border-bottom: 1px solid #4c1d95 !important;
+        }
+        body.theme-violet header h1, 
+        body.theme-violet header .text-gray-900 {
+            color: #ffffff !important;
+        }
+        body.theme-violet header .text-gray-500 {
+            color: #c4b5fd !important;
+        }
+
+        /* Cards & Containers in Violet Theme */
+        body.theme-violet .glass-card,
+        body.theme-violet .bg-white {
+            background-color: #281453 !important;
+            border: 1px solid #4c1d95 !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+            color: #ede9fe !important;
+        }
+
+        /* Text Colors */
+        body.theme-violet .text-gray-800, 
+        body.theme-violet .text-gray-900 {
+            color: #f5f3ff !important;
+        }
+        body.theme-violet .text-gray-700,
+        body.theme-violet .text-gray-600,
+        body.theme-violet .text-gray-500,
+        body.theme-violet .text-gray-400 {
+            color: #c4b5fd !important;
+        }
+
+        /* Overriding Emerald/Green to Violet */
+        body.theme-violet .text-emerald-700, 
+        body.theme-violet .text-emerald-600,
+        body.theme-violet .text-emerald-800 {
+            color: #a78bfa !important; 
+        }
+        body.theme-violet .bg-emerald-700, 
+        body.theme-violet .bg-emerald-600,
+        body.theme-violet .bg-gray-900 {
+            background-color: #6d28d9 !important;
+            color: #ffffff !important;
+            border-color: #5b21b6 !important;
+        }
+        body.theme-violet .bg-emerald-100, 
+        body.theme-violet .bg-emerald-50 {
+            background-color: #4c1d95 !important;
+            color: #ddd6fe !important;
+            border-color: #5b21b6 !important;
+        }
+
+        /* Sub-sections & Inputs */
+        body.theme-violet .bg-gray-50, 
+        body.theme-violet .bg-gray-100 {
+            background-color: #3b1c73 !important;
+            border-color: #4c1d95 !important;
+        }
+        body.theme-violet .bg-indigo-50, 
+        body.theme-violet .bg-indigo-100 {
+            background-color: #4c1d95 !important;
+            border-color: #5b21b6 !important;
+            color: #ede9fe !important;
+        }
+        body.theme-violet .text-indigo-900,
+        body.theme-violet .text-indigo-800,
+        body.theme-violet .text-indigo-700 {
+            color: #d8b4fe !important;
+        }
+        body.theme-violet .input-field {
+            background-color: #1f0d3d !important;
+            border-color: #5b21b6 !important;
+            color: #ffffff !important;
+        }
+        body.theme-violet .input-field:focus {
+            border-color: #8b5cf6 !important;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2) !important;
+        }
+
+        /* Table & Borders */
+        body.theme-violet border-b, 
+        body.theme-violet border-t, 
+        body.theme-violet .border-gray-200, 
+        body.theme-violet .border-gray-100 {
+            border-color: #4c1d95 !important;
+        }
+        body.theme-violet th {
+            background-color: #3b1c73 !important;
+            color: #d8b4fe !important;
+            border-color: #4c1d95 !important;
+        }
+        body.theme-violet td {
+            border-color: #4c1d95 !important;
+        }
+        body.theme-violet tr:hover {
+            background-color: #4c1d95 !important;
+        }
+    </style>
+</head>
+<body class="antialiased relative theme-premium">
+
+    <!-- Custom Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-xl transform transition-all duration-300 translate-y-20 opacity-0 z-[100] font-bold text-sm"></div>
+
+    <!-- Custom Confirm Modal -->
+    <div id="confirmModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-2xl text-center">
+            <div id="confirm-icon" class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl"><i class="ph ph-warning-circle"></i></div>
+            <h3 class="text-xl font-bold text-gray-900 mb-2">Message</h3>
+            <p id="confirm-msg" class="text-gray-500 mb-6 font-medium text-sm whitespace-pre-line"></p>
+            <div class="flex gap-3 justify-center">
+                <button onclick="closeConfirm()" class="px-5 py-2.5 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold rounded-lg transition">Close / বাতিল</button>
+                <button id="confirm-ok-btn" onclick="executeConfirm()" class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition">Yes / নিশ্চিত</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="bg-white shadow-sm sticky top-0 z-40" id="main-header">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex items-center justify-between py-3">
+                <div class="flex items-center gap-2">
+                    <i class="ph-fill ph-trophy text-3xl text-emerald-700"></i>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-900 tracking-tight leading-none">Modern Sporting Club</h1>
+                        <span class="text-[10px] font-bold text-gray-500 tracking-widest flex items-center flex-wrap gap-1 mt-1">
+                            <span class="uppercase">ESTD 1985 • ITINDA ROAD, DHALTITHA, BADIRHAT, NORTH 24 PGS</span>
+                            <span class="flex items-center ml-1">
+                                <i id="sync-status" class="ph-fill ph-cloud-check sync-offline text-lg" title="Cloud Sync Status"></i>
+                                <span id="sync-callout" class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded ml-2 animate-pulse border border-red-200 tracking-normal transition-opacity duration-300">সবুজ না হওয়া পর্যন্ত অপেক্ষা করুন...</span>
+                            </span>
+                        </span>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button id="adminToggleBtn" onclick="toggleView()" class="hidden bg-gray-900 text-white px-4 py-1.5 rounded-lg text-sm font-semibold shadow hover:bg-gray-800 transition">অ্যাডমিন প্যানেল</button>
+                    <button id="loginBtn" onclick="showLoginModal()" class="text-emerald-700 font-semibold text-sm px-3 py-1.5 border border-emerald-700 rounded-lg hover:bg-emerald-50">লগইন</button>
+                    <button id="logoutBtn" onclick="logout()" class="hidden text-red-600 font-semibold text-sm px-3 py-1.5 border border-red-200 bg-red-50 rounded-lg hover:bg-red-100">লগআউট</button>
+                </div>
+            </div>
+            
+            <nav id="publicNav" class="flex overflow-x-auto hide-scrollbar gap-1 mt-1 border-t border-gray-200">
+                <button onclick="switchTab('public', 'entry')" id="pub-tab-btn-entry" class="pub-tab-btn active flex-1 py-3 px-4 text-center font-semibold text-emerald-700 border-b-2 border-emerald-700">ENTRY <span class="text-[10px] block font-normal opacity-80">এন্ট্রি</span></button>
+                <button onclick="switchTab('public', 'scheduled')" id="pub-tab-btn-scheduled" class="pub-tab-btn flex-1 py-3 px-4 text-center font-medium text-gray-500 border-b-2 border-transparent hover:text-emerald-700">SCHEDULED <span class="text-[10px] block font-normal opacity-80">সূচি</span></button>
+                
+                <button onclick="switchTab('public', 'participants')" id="pub-tab-btn-participants" class="pub-tab-btn flex-1 py-3 px-4 text-center font-medium text-gray-500 border-b-2 border-transparent hover:text-emerald-700">
+                    PARTICIPANTS <span class="text-[10px] block font-normal opacity-80">দলসমূহ</span>
+                </button>
+                <button onclick="switchTab('public', 'live')" id="pub-tab-btn-live" class="pub-tab-btn flex-1 py-3 px-4 text-center font-medium text-gray-500 border-b-2 border-transparent hover:text-emerald-700 flex flex-col items-center">
+                    <span class="flex items-center gap-1">LIVE SCORE <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span></span></span>
+                    <span class="text-[10px] block font-normal opacity-80">লাইভ স্কোর</span>
+                </button>
+            </nav>
+
+            <nav id="adminNav" class="hidden overflow-x-auto hide-scrollbar gap-1 mt-1 border-t border-gray-200 bg-gray-900 rounded-t-xl px-2">
+                <button onclick="switchTab('admin', 'settings')" id="adm-tab-btn-settings" class="adm-tab-btn flex-1 py-3 px-4 text-center text-sm font-semibold text-emerald-400 border-b-2 border-emerald-400"><i class="ph ph-gear mr-1"></i> Settings</button>
+                <button onclick="switchTab('admin', 'teams')" id="adm-tab-btn-teams" class="adm-tab-btn flex-1 py-3 px-4 text-center text-sm font-medium text-gray-400 border-b-2 border-transparent hover:text-white"><i class="ph ph-users mr-1"></i> Teams</button>
+                <button onclick="switchTab('admin', 'schedule')" id="adm-tab-btn-schedule" class="adm-tab-btn flex-1 py-3 px-4 text-center text-sm font-medium text-gray-400 border-b-2 border-transparent hover:text-white"><i class="ph ph-calendar-plus mr-1"></i> Schedule</button>
+                <button onclick="switchTab('admin', 'score')" id="adm-tab-btn-score" class="adm-tab-btn flex-1 py-3 px-4 text-center text-sm font-medium text-gray-400 border-b-2 border-transparent hover:text-white"><i class="ph ph-cricket mr-1"></i> Score Entry</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- PUBLIC VIEW -->
+    <main id="public-view" class="flex-1 max-w-4xl mx-auto w-full px-4 mt-6 pb-12 block">
+        
+        <!-- ENTRY TAB -->
+        <section id="pub-tab-entry" class="pub-tab-content block">
+            <div class="glass-card rounded-2xl p-6 md:p-8">
+                <div class="mb-6 border-b pb-4"><h2 class="text-2xl font-bold text-gray-800">Team Registration</h2><p class="text-gray-500 text-sm mt-1">দলের রেজিস্ট্রশন ফর্ম</p></div>
+                <form id="registrationForm" onsubmit="handleFormSubmit(event)" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="input-group"><label>TEAM/CLUB NAME | দলের নাম *</label><input type="text" id="reg-teamName" required class="input-field"></div>
+                        <div class="input-group"><label>TEAM/CLUB HEAD | প্রধানের নাম *</label><input type="text" id="reg-teamHead" required class="input-field"></div>
+                        <div class="input-group md:col-span-2"><label>PHONE NUMBER | ফোন নং *</label><div class="relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 font-medium">+91</span><input type="tel" id="reg-phone" inputmode="numeric" required maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'')" class="input-field pl-11"></div></div>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 space-y-4">
+                        <h3 class="font-semibold text-gray-700 border-b pb-2">TEAM ADDRESS | দলের ঠিকানা</h3>
+                        
+                        <div class="input-group bg-white p-3 rounded border border-emerald-200 shadow-sm">
+                            <label class="text-emerald-700"><i class="ph ph-map-pin"></i> পূর্ণাঙ্গ ঠিকানা (Address) *</label>
+                            <div class="flex flex-col md:flex-row gap-2">
+                                <input type="text" id="reg-address" class="input-field border-emerald-300 focus:border-emerald-600 flex-1" placeholder="গুগল লোকেশন অনুযায়ী ঠিকানা লিখুন বা খুঁজুন..." required>
+                                <button type="button" onclick="getCurrentGoogleLocation()" class="text-sm font-bold text-emerald-600 bg-emerald-50 px-4 py-2 rounded-lg border border-emerald-200 hover:bg-emerald-100 flex items-center justify-center gap-2 transition whitespace-nowrap">
+                                    <i class="ph-fill ph-crosshair"></i> Use My Current Location
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
+                        <div class="flex justify-between items-end border-b pb-2 mb-4">
+                            <div><h3 class="font-semibold text-gray-700">Players / খেলোয়াড়</h3></div>
+                            <button type="button" onclick="addPlayer('reg')" class="flex items-center gap-1 bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg text-sm font-semibold"><i class="ph ph-plus-circle"></i> Add</button>
+                        </div>
+                        <div id="playersList" class="space-y-3"></div>
+                    </div>
+
+                    <div class="bg-amber-50 p-4 rounded-xl border border-amber-200 shadow-sm mt-4">
+                        <div class="flex items-start gap-3 cursor-pointer select-none" onclick="openRulesModal()">
+                            <div id="custom-checkbox-ui" class="mt-1 w-5 h-5 flex-shrink-0 flex items-center justify-center border border-gray-400 rounded bg-white transition-colors"></div>
+                            <input type="checkbox" id="reg-agree-checkbox" class="hidden">
+                            <span class="text-sm font-bold text-gray-800 leading-snug">
+                                আমি এই টুর্ণামেন্ে নির্ধারিত সকল নিয়ম কানুন মেনে সুষ্ঠুভাবে খেলায় অংশ গ্রহণ করিলাম। আমার সূত্রে আগত সমর্থক ও নীন্মোক্ত কোনো খেলোয়াড় কোন রকন বিশৃঙ্খলা সৃষ্টি করলে আইনত দায়ভার আমার।
+                            </span>
+                        </div>
+                    </div>
+
+                    <button id="submitRegBtn" type="submit" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-lg py-4 rounded-xl shadow-lg transition flex justify-center items-center gap-2">
+                        <span>Save & Proceed to Pay ₹<span id="ui-entryFeeBtn"></span></span><i class="ph ph-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- PAYMENT REDIRECT SECTION -->
+        <section id="payment-redirect-view" class="hidden">
+            <div class="glass-card rounded-2xl p-8 text-center max-w-md mx-auto mt-10 shadow-lg">
+                <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl"><i class="ph ph-shield-check"></i></div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">Registration Saved!</h2>
+                <p class="text-gray-600 mb-6">Reg No: <span id="pay-reg-no" class="font-bold text-black bg-gray-200 px-2 py-1 rounded"></span></p>
+                <div class="bg-white border border-gray-200 rounded-xl p-6 mb-6 shadow-sm">
+                    <p class="text-sm font-semibold text-gray-500 mb-1">ENTRY FEE TO PAY</p>
+                    <p class="text-4xl font-black text-emerald-700 mb-4">₹<span id="pay-amount"></span></p>
+                    <p class="text-xs text-gray-500 font-bold mb-4 uppercase">Via GPay, PhonePe, Paytm etc.</p>
+                    
+                    <div id="upi-init-box" class="space-y-4">
+                        <!-- Dynamic UPI Link & QR Code injected here -->
+                    </div>
+
+                    <div id="upi-verify-box" class="hidden space-y-4 mt-6 pt-4 border-t border-gray-100">
+                        <div class="p-3 bg-amber-50 text-amber-800 text-sm rounded border border-amber-200 font-semibold">পেমেন্ট সম্পন্ন করার পর নিচে ক্লিক করুন</div>
+                        <button id="verify-btn" onclick="verifyPayment()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-xl transition shadow flex justify-center items-center gap-2"><i class="ph ph-check-circle"></i> Payment Successful (Verify)</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="pub-tab-participants" class="pub-tab-content hidden">
+            <div class="glass-card rounded-2xl p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2"><i class="ph ph-users-three mr-2 text-emerald-600"></i>Registered Teams (অংশগ্রহণকারী দলসমূহ)</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[600px]">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-600 text-sm">
+                                <th class="p-3 border-b rounded-tl-lg">Regd. No.</th>
+                                <th class="p-3 border-b">Team Name</th>
+                                <th class="p-3 border-b text-center rounded-tr-lg">Download PDF</th>
+                            </tr>
+                        </thead>
+                        <tbody id="public-participants-list" class="text-sm">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        
+        <!-- SCHEDULED TAB -->
+        <section id="pub-tab-scheduled" class="pub-tab-content hidden">
+            <div class="glass-card rounded-2xl p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2"><i class="ph ph-calendar-check mr-2 text-emerald-600"></i>Tournament Fixtures & Results</h2>
+                <div id="public-fixtures-list" class="space-y-4"></div>
+            </div>
+        </section>
+
+        <!-- LIVE SCORE TAB -->
+        <section id="pub-tab-live" class="pub-tab-content hidden">
+            <div id="public-live-scoreboard" class="glass-card rounded-2xl p-6 text-center">
+                <i class="ph ph-broadcast text-5xl text-gray-300 mb-4 inline-block"></i>
+                <h2 class="text-2xl font-bold text-gray-800">Loading Live Sync...</h2>
+            </div>
+        </section>
+    </main>
+
+    <!-- ADMIN BACK OFFICE VIEW -->
+    <main id="admin-view" class="hidden flex-1 max-w-6xl mx-auto w-full px-4 mt-6 pb-12">
+        
+        <section id="adm-tab-settings" class="adm-tab-content block">
+            <div class="bg-white rounded-xl shadow p-6 border-t-4 border-gray-900">
+                <h2 class="text-xl font-bold text-gray-800 mb-6 border-b pb-2">Tournament Settings</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div class="input-group"><label>Entry Fee (₹)</label><input type="number" id="set-fee" class="input-field" value="1000"></div>
+                    <div class="input-group"><label>UPI ID</label><input type="text" id="set-upi" class="input-field" value="modernsportingclub@idbi"></div>
+                    <div class="input-group"><label>Total Teams Limit</label><input type="number" id="set-teamLimit" class="input-field" value="16"></div>
+                    <div class="input-group"><label>Max Players / Team</label><input type="number" id="set-playersLimit" class="input-field" value="9"></div>
+                    <div class="input-group"><label>Total Overs / Match</label><input type="number" id="set-totalOvers" class="input-field" value="10"></div>
+                    <div class="input-group md:col-span-2 bg-indigo-50 p-4 rounded-xl border border-indigo-200">
+                        <div class="flex justify-between items-center mb-3 border-b border-indigo-200 pb-2">
+                            <label class="!mb-0 text-indigo-900 font-bold"><i class="ph ph-sliders mr-1"></i> Bowler Over Limits (ডায়নামিক কনফিগারেশন)</label>
+                            <button type="button" onclick="addBowlerRuleRow()" class="bg-indigo-600 text-white px-3 py-1 rounded text-xs font-bold shadow hover:bg-indigo-700">+ Add Rule</button>
+                        </div>
+                        <div id="bowler-rules-container" class="space-y-3 mb-3"></div>
+                        <div class="bg-white p-3 rounded border border-indigo-100 text-sm font-bold text-gray-700 flex flex-col md:flex-row justify-between items-center">
+                            <div id="bowler-rules-calc" class="text-indigo-600">হিসাব: 0</div>
+                            <div class="text-red-600 mt-2 md:mt-0">মোট ম্যাচ ওভার: <span id="bowler-rules-total" class="text-xl">0</span></div>
+                        </div>
+                    </div>
+                    <div class="input-group"><label>Tournament Date</label><input type="datetime-local" id="set-datetime" class="input-field"></div>
+                    <div class="input-group"><label>Age Limit</label><input type="text" id="set-age" class="input-field" value="Open for all"></div>
+                </div>
+
+                <!-- Admin Section for Tournament Rules -->
+                <div class="mt-8 border-t-2 border-gray-100 pt-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="ph ph-gavel"></i> Tournament Rules (নিয়মাবলি)</h3>
+                    <div id="admin-rules-list" class="space-y-2 mb-4"></div>
+                    <div class="flex gap-2">
+                        <input type="text" id="new-rule-input" class="input-field flex-1" placeholder="Type new rule (e.g., প্লেড প্লেয়ার খেলা নেই।)">
+                        <button type="button" onclick="addAdminRule()" class="bg-emerald-600 text-white px-5 py-2.5 rounded-lg font-bold hover:bg-emerald-700 transition">Add</button>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-2 font-semibold">* This rules list will dynamically appear in the Registration Agreement Modal and generated PDFs.</p>
+                </div>
+
+                <div class="input-group mt-6 hidden">
+                    <label>Tournament Rules / নিয়মাবলি (প্রতিটি নিয়ম নতুন লাইনে লিখুন)</label>
+                    <textarea id="set-rules" class="input-field" rows="5" placeholder="১. ম্যাচ শুরু হওয়ার অন্তত ৩০ মিনিট আগে মাঠে রিপোর্ট করতে হবে..."></textarea>
+                </div>
+
+                <button onclick="saveSettings(event)" class="mt-8 bg-gray-900 text-white px-8 py-3 rounded-lg font-bold hover:bg-gray-800 w-full md:w-auto transition shadow-lg text-center flex items-center justify-center gap-2">Save All Settings to Cloud <i class="ph ph-cloud-arrow-up text-xl"></i></button>
+            </div>
+        </section>
+
+        <section id="adm-tab-teams" class="adm-tab-content hidden">
+            <div class="bg-white rounded-xl shadow p-6 border-t-4 border-gray-900 overflow-x-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-gray-800">Registered Teams</h2>
+                    <span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-sm font-bold"><span id="team-count">0</span> Registered</span>
+                </div>
+                <table class="w-full text-left border-collapse min-w-[800px]">
+                    <thead><tr class="bg-gray-100 text-gray-600 text-sm"><th class="p-3 border-b">Team Name (Click for Details)</th><th class="p-3 border-b">Leader</th><th class="p-3 border-b">Phone</th><th class="p-3 border-b">Status</th><th class="p-3 border-b text-center">Action</th></tr></thead>
+                    <tbody id="admin-teams-table" class="text-sm"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="adm-tab-schedule" class="adm-tab-content hidden">
+            <div class="bg-white rounded-xl shadow p-6 border-t-4 border-gray-900">
+                <div class="flex justify-between items-center mb-6 border-b pb-4">
+                    <h2 class="text-xl font-bold text-gray-800">Match Schedules</h2>
+                    <div class="flex gap-2">
+                        <select id="schedule-stage" class="input-field !w-auto !py-1.5"><option>League</option><option>Quarter Final</option><option>Semi Final</option><option>Final</option></select>
+                        <button onclick="autoGenerateMatches()" class="bg-indigo-600 text-white px-4 py-1.5 rounded text-sm font-bold hover:bg-indigo-700"><i class="ph ph-magic-wand"></i> Auto Pair</button>
+                    </div>
+                </div>
+                
+                <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 mb-6">
+                    <h3 class="font-bold text-indigo-900 mb-3 text-sm uppercase flex items-center gap-2"><i class="ph ph-plus-circle"></i> Create Match Manually</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <div class="input-group">
+                            <label class="text-xs">Team 1 (প্রথম দল)</label>
+                            <select id="manual-match-t1" class="input-field py-2"></select>
+                        </div>
+                        <div class="input-group">
+                            <label class="text-xs">Team 2 (দ্বিতীয় দল)</label>
+                            <select id="manual-match-t2" class="input-field py-2"></select>
+                        </div>
+                        <div class="input-group">
+                            <label class="text-xs">Match Stage</label>
+                            <select id="manual-match-stage" class="input-field py-2">
+                                <option value="League">League Match</option>
+                                <option value="Quarter Final">Quarter Final</option>
+                                <option value="Semi Final">Semi Final</option>
+                                <option value="Final">Final</option>
+                            </select>
+                        </div>
+                        <button onclick="createManualMatch()" class="bg-indigo-600 text-white font-bold py-2 rounded-lg shadow hover:bg-indigo-700 transition">Create Match</button>
+                    </div>
+                </div>
+                
+                <div id="admin-matches-list" class="space-y-4"></div>
+            </div>
+        </section>
+
+        <section id="adm-tab-score" class="adm-tab-content hidden">
+            <!-- Score entry components -->
+            <div id="score-setup-panel" class="bg-white rounded-xl shadow p-6 border-t-4 border-gray-900 mb-4">
+                <h2 class="text-lg font-bold mb-4">Initialize Match Setup</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                    <div><label class="block text-sm font-bold mb-2">Select Match to Score</label><select id="score-match-select" class="input-field" onchange="setupMatchContext()"></select></div>
+                    <div class="flex items-end gap-4">
+                        <div class="flex-1"><label class="block text-sm font-bold mb-2">Who Won Toss?</label><select id="toss-winner" class="input-field"></select></div>
+                        <div class="flex-1"><label class="block text-sm font-bold mb-2">Elected To</label><select id="toss-decision" class="input-field"><option value="Bat">Bat</option><option value="Bowl">Bowl</option></select></div>
+                    </div>
+                </div>
+                <button onclick="startScoringSession()" class="bg-emerald-600 text-white px-6 py-2 rounded font-bold w-full hover:bg-emerald-700">Go Live to Cloud <i class="ph ph-broadcast"></i></button>
+            </div>
+
+            <!-- SCORING CONSOLE (With Fullscreen support) -->
+            <div id="active-scoring-panel" class="hidden rounded-xl overflow-hidden shadow-2xl border border-gray-800 fs-container flex flex-col relative bg-white">
+                
+                <!-- FULLSCREEN TOGGLE BAR -->
+                <div class="bg-gray-900 text-gray-300 flex justify-between items-center px-4 py-2 text-xs font-bold w-full">
+                    <span class="tracking-widest flex items-center gap-1"><i class="ph-fill ph-broadcast text-red-500 animate-pulse"></i> LIVE SCORING CONSOLE</span>
+                    <button onclick="toggleScoringFullscreen()" class="hover:text-white flex items-center gap-1 bg-gray-800 px-3 py-1 rounded transition">
+                        <i class="ph ph-corners-out"></i> Toggle Fullscreen
+                    </button>
+                </div>
+
+                <div class="batting-theme p-4 md:p-6 flex-none">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <span class="bg-purple-800 text-purple-200 text-xs px-2 py-1 rounded font-bold uppercase">Batting</span>
+                            <span id="sc-innings-badge" class="ml-2 bg-yellow-500 text-yellow-900 text-[10px] px-2 py-1 rounded font-black uppercase">1st Innings</span>
+                            <h2 id="sc-batting-team" class="text-xl md:text-2xl font-bold mt-1">Team A</h2>
+                        </div>
+                        <div class="text-right flex flex-col items-end">
+                            <div class="text-3xl md:text-4xl font-black tracking-tighter" id="sc-total-score">0 - 0</div>
+                            <div class="text-sm font-medium opacity-80">Overs: <span id="sc-overs">0.0</span> / <span id="sc-total-overs-disp">10</span></div>
+                            <div class="text-xs font-bold text-yellow-300 mt-1 bg-black/20 px-2 py-0.5 rounded shadow-inner">Extras: <span id="sc-extras">0</span></div>
+                        </div>
+                    </div>
+                    
+                    <div id="sc-target-admin-container"></div>
+
+                    <div class="grid grid-cols-2 gap-4 mt-6">
+                        <div class="bg-white/10 rounded-lg p-3 relative border border-white/20">
+                            <span class="absolute -top-2 left-3 bg-yellow-500 text-yellow-900 text-[10px] font-black px-2 py-0.5 rounded shadow">STRIKER *</span>
+                            <select id="sc-striker-select" onchange="updateBatsmenUI()" class="w-full bg-transparent border-b border-white/30 text-white font-bold mb-1 focus:bg-purple-900 pb-1 text-sm"><option value="">Select...</option></select>
+                            <div class="text-2xl font-bold"><span id="sc-striker-run">0</span> <span class="text-xs font-normal opacity-70">(<span id="sc-striker-ball">0</span>)</span></div>
+                        </div>
+                        <div class="bg-white/5 rounded-lg p-3 relative border border-white/10">
+                            <span class="absolute -top-2 left-3 bg-gray-500 text-white text-[10px] font-black px-2 py-0.5 rounded shadow">RUNNER</span>
+                            <select id="sc-runner-select" onchange="updateBatsmenUI()" class="w-full bg-transparent border-b border-white/30 text-white font-bold mb-1 focus:bg-purple-900 pb-1 text-sm"><option value="">Select...</option></select>
+                            <div class="text-xl font-bold"><span id="sc-runner-run">0</span> <span class="text-xs font-normal opacity-70">(<span id="sc-runner-ball">0</span>)</span></div>
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-between items-center">
+                        <button onclick="swapStrikeManual()" class="bg-purple-700 hover:bg-purple-600 px-4 py-1.5 rounded text-sm font-bold transition"><i class="ph ph-arrows-left-right"></i> Swap Strike</button>
+                        <button id="end-innings-btn" onclick="endInnings()" class="bg-orange-600 hover:bg-orange-700 px-4 py-1.5 rounded text-sm font-bold transition shadow-md"><i class="ph ph-flag-checkered"></i> End Innings</button>
+                    </div>
+                </div>
+
+                <div class="bowling-theme p-4 md:p-6 flex-1 flex flex-col">
+                    <div class="flex flex-col md:flex-row justify-between md:items-center mb-6 border-b border-gray-200 pb-4 gap-4">
+                        <div><span class="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded font-bold uppercase">Bowling</span><h3 id="sc-bowling-team" class="text-lg font-bold mt-1">Team B</h3></div>
+                        <div class="w-full md:w-72 bg-white p-2 rounded-lg border border-gray-200 shadow-sm text-gray-800">
+                            <label class="text-[10px] font-bold text-gray-500 uppercase block mb-1">Current Bowler</label>
+                            <select id="sc-bowler-select" onchange="updateBowlerUI()" class="w-full bg-transparent font-bold text-sm outline-none"><option value="">Select Bowler...</option></select>
+                            <div class="text-xs mt-1 font-semibold text-gray-600 flex justify-between"><span>Runs: <span id="sc-bowler-runs">0</span> | Wkts: <span id="sc-bowler-wkts">0</span></span> <span>Overs: <span id="sc-bowler-overs">0.0</span></span></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Advanced Scoring Matrix -->
+                    <div class="mb-4 flex-1">
+                        <div class="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Runs (Strictly for Striker Batsman)</div>
+                        <div class="grid grid-cols-5 md:grid-cols-9 gap-1.5 mb-3">
+                            <button onclick="processBall(0, 'RUN')" class="score-btn">0</button>
+                            <button onclick="processBall(1, 'RUN')" class="score-btn">1</button>
+                            <button onclick="processBall(2, 'RUN')" class="score-btn">2</button>
+                            <button onclick="processBall(3, 'RUN')" class="score-btn">3</button>
+                            <button onclick="processBall(4, 'RUN')" class="score-btn btn-boundary">4</button>
+                            <button onclick="processBall(5, 'RUN')" class="score-btn">5</button>
+                            <button onclick="processBall(6, 'RUN')" class="score-btn btn-boundary">6</button>
+                            <button onclick="processBall(7, 'RUN')" class="score-btn">7</button>
+                            <button onclick="processBall(8, 'RUN')" class="score-btn">8</button>
+                        </div>
+                        
+                        <div class="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Extras (Wides & No Balls - NO runs for any Batsman)</div>
+                        <div class="grid grid-cols-4 md:grid-cols-6 gap-1.5 mb-3">
+                            <button onclick="processBall(0, 'WD')" class="score-btn btn-w">WD</button>
+                            <button onclick="processBall(1, 'WD')" class="score-btn btn-w">WD+1</button>
+                            <button onclick="processBall(2, 'WD')" class="score-btn btn-w">WD+2</button>
+                            <button onclick="processBall(3, 'WD')" class="score-btn btn-w">WD+3</button>
+                            <button onclick="processBall(4, 'WD')" class="score-btn btn-w">WD+4</button>
+                            <button onclick="processBall(0, 'NB')" class="score-btn btn-n">NB</button>
+                            <button onclick="processBall(1, 'NB')" class="score-btn btn-n">NB+1</button>
+                            <button onclick="processBall(2, 'NB')" class="score-btn btn-n">NB+2</button>
+                            <button onclick="processBall(4, 'NB')" class="score-btn btn-n">NB+4</button>
+                            <button onclick="processBall(6, 'NB')" class="score-btn btn-n">NB+6</button>
+                        </div>
+
+                        <div class="text-xs font-bold text-gray-400 mb-2 uppercase tracking-wider">Byes & Leg Byes (NO runs for any Batsman)</div>
+                        <div class="grid grid-cols-4 md:grid-cols-8 gap-1.5 mb-4">
+                            <button onclick="processBall(1, 'BYE')" class="score-btn btn-b">B1</button>
+                            <button onclick="processBall(2, 'BYE')" class="score-btn btn-b">B2</button>
+                            <button onclick="processBall(3, 'BYE')" class="score-btn btn-b">B3</button>
+                            <button onclick="processBall(4, 'BYE')" class="score-btn btn-b">B4</button>
+                            <button onclick="processBall(1, 'LB')" class="score-btn btn-b">LB1</button>
+                            <button onclick="processBall(2, 'LB')" class="score-btn btn-b">LB2</button>
+                            <button onclick="processBall(3, 'LB')" class="score-btn btn-b">LB3</button>
+                            <button onclick="processBall(4, 'LB')" class="score-btn btn-b">LB4</button>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-gray-200">
+                            <button onclick="showWicketModal()" class="score-btn btn-out flex items-center justify-center gap-2 py-3"><i class="ph-fill ph-skull"></i> WICKET</button>
+                            <button onclick="undoLastBall()" class="bg-gray-800 text-white rounded-md font-bold flex items-center justify-center gap-2 hover:bg-gray-700 transition"><i class="ph ph-arrow-u-up-left"></i> Undo Last Ball</button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white p-3 rounded-lg border shadow-sm mt-auto text-gray-800">
+                        <span class="text-xs font-bold text-gray-400 uppercase tracking-wider block mb-2">This Over</span>
+                        <div id="sc-this-over" class="flex gap-2 text-lg font-mono font-bold flex-wrap"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Terms and Conditions Public Modal -->
+    <div id="rulesModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl relative flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b flex justify-between items-center bg-amber-50 rounded-t-2xl">
+                <h2 class="text-2xl font-bold text-amber-900 flex items-center gap-2"><i class="ph ph-gavel"></i> টুর্নামেন্টের নিয়মাবলি</h2>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <p class="text-sm text-red-600 mb-4 font-bold border-b border-red-100 pb-3">অনুগ্রহ করে নিচের সকল শর্তাবলী পড়ে ও মেনে নিয়ে টিক দিন, তবেই রেজিস্ট্রেশন সম্পন্ন হবে:</p>
+                <div id="modal-rules-container" class="space-y-3">
+                    <!-- Dynamic Rule Checkboxes Injected Here -->
+                </div>
+            </div>
+            <div class="p-5 border-t bg-gray-50 flex flex-col sm:flex-row gap-3 rounded-b-2xl">
+                <button onclick="cancelRegistrationRules()" class="flex-1 bg-red-100 text-red-700 py-3 rounded-xl font-bold hover:bg-red-200 transition border border-red-200">Cancel Registration / বাতিল</button>
+                <button id="accept-rules-btn" onclick="acceptRegistrationRules()" disabled class="flex-1 bg-gray-300 text-gray-500 py-3 rounded-xl font-bold transition cursor-not-allowed">Accept & Proceed / গ্রহণ করুন</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN: VIEW TEAM DETAILS MODAL -->
+    <div id="adminTeamDetailsModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-lg shadow-2xl relative max-h-[90vh] flex flex-col">
+            <div class="p-5 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
+                <h2 class="text-xl font-bold flex items-center gap-2 text-gray-800"><i class="ph-fill ph-users text-emerald-600"></i> Team Details</h2>
+                <button onclick="closeAdminTeamDetailsModal()" class="text-gray-400 hover:text-gray-700"><i class="ph ph-x-bold text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto space-y-4 text-sm font-medium text-gray-700">
+                <div class="grid grid-cols-2 gap-2 border-b pb-3">
+                    <div><span class="text-gray-400 block text-xs uppercase">Reg No:</span><span id="v-team-reg" class="font-bold text-gray-900 text-lg"></span></div>
+                    <div><span class="text-gray-400 block text-xs uppercase">Phone:</span><span id="v-team-phone" class="font-mono text-gray-900 font-bold"></span></div>
+                </div>
+                <div><span class="text-gray-400 block text-xs uppercase">Team Name:</span><span id="v-team-name" class="font-bold text-xl text-emerald-700 uppercase"></span></div>
+                <div><span class="text-gray-400 block text-xs uppercase">Team Leader:</span><span id="v-team-head" class="font-bold text-gray-900"></span></div>
+                <div><span class="text-gray-400 block text-xs uppercase">Address:</span><span id="v-team-address"></span></div>
+                
+                <div class="mt-4 pt-4 border-t">
+                    <span class="text-gray-400 block text-xs uppercase mb-2">Squad / Players:</span>
+                    <div id="v-team-players" class="grid grid-cols-2 gap-2 bg-gray-50 p-3 rounded border"></div>
+                </div>
+            </div>
+            <div class="p-5 border-t bg-gray-50 flex gap-3 rounded-b-xl">
+                <button onclick="closeAdminTeamDetailsModal()" class="flex-1 bg-white border border-gray-300 text-gray-700 py-2.5 rounded-lg font-bold hover:bg-gray-100">Close</button>
+                <button onclick="printCurrentTeamDetails()" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-lg font-bold shadow hover:bg-emerald-700 flex items-center justify-center gap-2"><i class="ph ph-printer"></i> Download PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PUBLIC: TEAM DETAILS MODAL -->
+    <div id="publicTeamModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-sm shadow-2xl relative">
+            <div class="p-5 border-b flex justify-between items-center bg-emerald-50 rounded-t-xl">
+                <h2 class="text-xl font-bold text-emerald-800" id="pub-modal-teamName">Team Name</h2>
+                <button onclick="document.getElementById('publicTeamModal').classList.add('hidden')" class="text-emerald-400 hover:text-emerald-700"><i class="ph ph-x-bold text-xl"></i></button>
+            </div>
+            <div class="p-5 text-sm text-gray-700 space-y-3">
+                <div><span class="font-bold text-gray-400 uppercase text-xs block">Team Leader:</span> <span id="pub-modal-head" class="font-bold text-base"></span></div>
+                <div><span class="font-bold text-gray-400 uppercase text-xs block">Location:</span> <span id="pub-modal-address"></span></div>
+                <div class="pt-3 border-t">
+                    <span class="font-bold text-gray-400 uppercase text-xs block mb-2">Playing Squad:</span>
+                    <div id="pub-modal-players" class="flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+            <div class="p-4 bg-gray-50 border-t rounded-b-xl">
+                <button onclick="document.getElementById('publicTeamModal').classList.add('hidden')" class="w-full bg-gray-200 text-gray-800 font-bold py-2 rounded-lg">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN: Edit Team Modal -->
+    <div id="editTeamModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-2xl shadow-2xl relative max-h-[90vh] flex flex-col text-gray-800">
+            <div class="p-5 border-b flex justify-between items-center text-gray-900">
+                <h2 class="text-xl font-bold">Edit Team Details</h2>
+                <button onclick="closeEditTeamModal()" class="text-gray-400 hover:text-gray-700"><i class="ph ph-x-bold text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto">
+                <form id="editTeamForm" onsubmit="saveEditedTeam(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="input-group"><label>Team Name</label><input type="text" id="edit-teamName" required class="input-field"></div>
+                        <div class="input-group"><label>Team Head</label><input type="text" id="edit-teamHead" required class="input-field"></div>
+                        <div class="input-group"><label>Phone</label><input type="text" id="edit-phone" required class="input-field"></div>
+                        <div class="input-group"><label>Full Address</label><input type="text" id="edit-address" required class="input-field"></div>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 mt-4">
+                        <div class="flex justify-between items-center border-b pb-2 mb-3">
+                            <h3 class="font-semibold text-sm text-gray-700">Edit Players</h3>
+                            <button type="button" onclick="addPlayer('edit')" class="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded font-bold">+ Add</button>
+                        </div>
+                        <div id="editPlayersList" class="space-y-2"></div>
+                    </div>
+                    <div class="pt-4 flex gap-3">
+                        <button type="button" onclick="closeEditTeamModal()" class="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg font-bold">Cancel</button>
+                        <button type="submit" class="flex-1 bg-emerald-600 text-white py-3 rounded-lg font-bold shadow">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wicket Modal -->
+    <div id="wicketModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-sm shadow-2xl relative text-gray-800">
+            <div class="p-4 border-b bg-red-50 rounded-t-xl text-red-800 font-bold flex justify-between items-center">
+                <span><i class="ph ph-skull mr-2"></i> Register Wicket</span>
+                <button onclick="document.getElementById('wicketModal').classList.add('hidden')" class="text-red-400 hover:text-red-700"><i class="ph ph-x-bold"></i></button>
+            </div>
+            <div class="p-5 space-y-4">
+                <div class="input-group">
+                    <label>Who is Out?</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer bg-gray-50 p-2 rounded border flex-1"><input type="radio" name="outBatter" id="wkt-striker-val" value="" checked> <span id="wkt-striker-opt" class="font-bold text-sm">Striker</span></label>
+                        <label class="flex items-center gap-2 cursor-pointer bg-gray-50 p-2 rounded border flex-1"><input type="radio" name="outBatter" id="wkt-runner-val" value=""> <span id="wkt-runner-opt" class="font-bold text-sm">Runner</span></label>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Dismissal Type</label>
+                    <select id="wkt-type" class="input-field text-gray-800">
+                        <option value="Caught">Caught Out</option>
+                        <option value="Bowled">Bowled</option>
+                        <option value="Run Out">Run Out</option>
+                        <option value="LBW">LBW</option>
+                        <option value="Stumped">Stumped</option>
+                        <option value="Hit Wicket">Hit Wicket</option>
+                    </select>
+                </div>
+                <div class="input-group">
+                    <label>Runs completed before out (if any)</label>
+                    <select id="wkt-runs" class="input-field text-gray-800">
+                        <option value="0">0 Runs</option>
+                        <option value="1">1 Run (Crossed)</option>
+                        <option value="2">2 Runs</option>
+                        <option value="3">3 Runs</option>
+                    </select>
+                </div>
+                <button onclick="confirmWicket()" class="w-full bg-red-600 text-white font-bold py-3 rounded-lg mt-2 hover:bg-red-700">Confirm Wicket & Submit</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Match Modal -->
+    <div id="editMatchModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl w-full max-w-md shadow-2xl relative flex flex-col text-gray-800">
+            <div class="p-5 border-b flex justify-between items-center bg-indigo-50 rounded-t-xl">
+                <h2 class="text-xl font-bold text-indigo-900"><i class="ph ph-calendar-edit mr-2"></i>ম্যাচ এডিট করুন</h2>
+                <button onclick="closeEditMatchModal()" class="text-gray-400 hover:text-gray-700"><i class="ph ph-x-bold text-xl"></i></button>
+            </div>
+            <div class="p-6">
+                <form id="editMatchForm" onsubmit="saveEditedMatch(event)" class="space-y-4">
+                    <div class="input-group">
+                        <label>Team 1 (প্রথম দল)</label>
+                        <select id="edit-match-team1" required class="input-field text-gray-800"></select>
+                    </div>
+                    <div class="text-center font-black text-gray-400 text-sm py-1">VS</div>
+                    <div class="input-group">
+                        <label>Team 2 (দ্বিতীয় দল)</label>
+                        <select id="edit-match-team2" required class="input-field text-gray-800"></select>
+                    </div>
+                    <div class="pt-4 flex gap-3">
+                        <button type="button" onclick="closeEditMatchModal()" class="flex-1 bg-gray-200 text-gray-800 py-3 rounded-lg font-bold">Cancel</button>
+                        <button type="submit" class="flex-1 bg-indigo-600 text-white py-3 rounded-lg font-bold shadow hover:bg-indigo-700">Save Match</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Login Modal -->
+    <div id="loginModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl relative text-gray-800">
+            <button onclick="hideLoginModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="ph ph-x-bold text-xl"></i></button>
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-900">Back Office Login</h2>
+            <div class="space-y-4">
+                <div class="input-group"><label>Username</label><input type="text" id="login-user" class="input-field text-gray-800" placeholder="ইউজার নেম"></div>
+                <div class="input-group"><label>Password</label><input type="password" id="login-pass" class="input-field text-gray-800" placeholder="পাসওয়ার্ড"></div>
+                <button onclick="performLogin()" class="w-full bg-gray-900 text-white font-bold py-3 rounded-lg hover:bg-gray-800 transition">Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF GENERATION VIEW -->
+    <div id="receipt-view" class="hidden min-h-screen bg-gray-200 py-8 px-4">
+        <div class="print-action-bar max-w-[210mm] mx-auto mb-6 flex justify-between items-center bg-white p-4 rounded-xl shadow">
+            <button onclick="goBackToApp()" class="text-gray-600 font-bold hover:text-black flex items-center gap-1"><i class="ph ph-arrow-left"></i> Back</button>
+            <button onclick="window.print()" class="bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-emerald-700"><i class="ph ph-printer"></i> Print</button>
+            <button id="receipt-download-btn" onclick="downloadReceiptPDF()" class="bg-emerald-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-emerald-700">
+                <i class="ph ph-download-simple"></i> Download PDF
+            </button>
+        </div>
+
+        <div id="pdf-render-target">
+            <div class="a4-container font-serif border border-gray-300 bg-white relative mb-8 text-black">
+                <div class="text-center mb-6">
+                    <h1 class="text-3xl font-bold tracking-wider mb-1 uppercase text-black">Modern Sporting Club</h1>
+                    <p class="text-sm font-bold tracking-widest uppercase">ESTD-1985</p>
+                    <p class="text-sm font-medium">Itinda Road, Dhaltitha, Basirhat, North 24 Pgs, WB</p>
+                    <hr class="border-t-2 border-black mt-4 mb-1"><hr class="border-t border-black">
+                </div>
+                <div class="flex justify-between items-center mb-8">
+                    <div class="font-bold text-lg border-2 border-black px-3 py-1 text-black">Registration No: <span id="r-regNo"></span></div>
+                    <div class="font-semibold text-md text-black">Date: <span id="r-date"></span></div>
+                </div>
+                <div class="space-y-4 mb-8 text-[15px] text-black">
+                    <div class="flex"><span class="w-48 font-bold">Team Name:</span><span id="r-teamName" class="flex-1 border-b border-dashed border-gray-400 uppercase font-bold"></span></div>
+                    <div class="flex"><span class="w-48 font-bold">Team Head Name:</span><span id="r-teamHead" class="flex-1 border-b border-dashed border-gray-400"></span></div>
+                    <div class="flex"><span class="w-48 font-bold">Team Address:</span><span id="r-address" class="flex-1 border-b border-dashed border-gray-400 leading-tight"></span></div>
+                    <div class="flex"><span class="w-48 font-bold">Head Mobile Number:</span><span class="flex-1 border-b border-dashed border-gray-400 font-mono"><span id="r-phone"></span></span></div>
+                    <div class="flex" id="r-fee-container"><span class="w-48 font-bold">Pay Amount:</span><span class="flex-1 border-b border-dashed border-gray-400 font-bold"><span id="r-fee"></span> (<span id="r-fee-words" class="capitalize"></span>)</span></div>
+                </div>
+                <div class="mb-8 text-black">
+                    <h3 class="font-bold mb-3 border-b border-black pb-1 inline-block text-black">Players Name</h3>
+                    <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-[15px]" id="r-playersList"></div>
+                </div>
+            </div>
+
+            <div class="html2pdf__page-break"></div>
+            
+            <div class="a4-container font-serif border border-gray-300 bg-white relative print-page-break text-black">
+                <div class="text-center mb-6">
+                    <h1 class="text-3xl font-bold tracking-wider mb-1 uppercase text-black">Modern Sporting Club</h1>
+                    <p class="text-sm font-bold tracking-widest uppercase text-black">ESTD-1985</p>
+                    <p class="text-sm font-medium text-black">Itinda Road, Dhaltitha, Basirhat, North 24 Pgs, WB</p>
+                    <hr class="border-t-2 border-black mt-4 mb-1"><hr class="border-t border-black">
+                </div>
+                <div class="flex justify-between items-center mb-6 text-black">
+                    <div class="font-bold text-md">Team Registration No: <span id="r2-regNo"></span></div>
+                    <div class="font-semibold text-md">Date: <span id="r2-date"></span></div>
+                </div>
+                <div class="mb-6 space-y-1 text-black">
+                    <div class="font-bold text-lg">For,</div>
+                    <div class="font-bold text-lg uppercase" id="r2-teamName"></div>
+                    <div class="text-md font-medium" id="r2-address"></div>
+                </div>
+                <div class="mb-8 mt-8 text-black">
+                    <h3 class="font-bold text-lg mb-3 underline decoration-gray-400 text-black">Rules & Regulations (নিয়মাবলি):</h3>
+                    <!-- Dynamic Rules Render Here -->
+                    <ul id="r2-rules-list" class="list-none pl-0 space-y-2 text-[15px] font-medium text-black">
+                        <!-- Rules injected from JS -->
+                    </ul>
+                </div>
+                <div class="mt-12 text-black">
+                    <h3 class="font-bold text-lg mb-2 underline decoration-gray-400 text-black">Rules Declaration:</h3>
+                    <p class="text-[15px] italic mb-16 text-black leading-relaxed">I, the undersigned, hereby declare that I have read and understood all the rules and regulations of the Modern Sporting Club tournament. I agree to abide by these rules and ensure my team follows them strictly. I understand that any violation may result in disqualification.</p>
+                    
+                    <div class="flex justify-end pr-8">
+                        <div class="text-center text-black">
+                            <div class="font-bold text-xl font-sans tracking-wide" id="r2-teamHead-sign"></div>
+                            <hr class="border-t-2 border-gray-800 w-64 mx-auto mt-2 mb-1">
+                            <div class="font-bold text-sm uppercase text-black">Digitally Signed by Team Head</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF MATCH SUMMARY VIEW -->
+    <div id="summary-view" class="hidden min-h-screen bg-gray-200 py-8 px-4">
+        <div class="print-action-bar max-w-[210mm] mx-auto mb-6 flex justify-between items-center bg-white p-4 rounded-xl shadow">
+            <button onclick="goBackToAppFromSummary()" class="text-gray-600 font-bold hover:text-black flex items-center gap-1"><i class="ph ph-arrow-left"></i> Back</button>
+            <button onclick="window.print()" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-indigo-700"><i class="ph ph-printer"></i> Print / Download PDF</button>
+            <button id="summary-download-btn" onclick="downloadSummaryPDF()" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold shadow hover:bg-indigo-700"><i class="ph ph-download-simple"></i> Download PDF</button>
+        </div>
+        <div class="a4-container font-sans border border-gray-300 bg-white text-gray-900">
+            <div class="text-center mb-6 pb-4 border-b-2 border-gray-800">
+                <h1 class="text-3xl font-black tracking-wider mb-1 uppercase text-gray-900">Modern Sporting Club</h1>
+                <p class="text-sm font-semibold text-gray-600 tracking-widest uppercase">Official Match Summary</p>
+            </div>
+            
+            <div class="text-center mb-8 text-gray-900">
+                <div id="s-stage" class="inline-block bg-gray-200 text-gray-800 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4">Stage</div>
+                <div class="flex justify-center items-center gap-4 text-2xl font-black uppercase text-gray-900">
+                    <span id="s-team1-name" class="text-indigo-800">TEAM 1</span>
+                    <span class="text-gray-400 text-lg">VS</span>
+                    <span id="s-team2-name" class="text-emerald-800">TEAM 2</span>
+                </div>
+                <div id="s-result" class="mt-4 text-lg font-bold text-gray-800 bg-gray-100 py-2 rounded-lg inline-block px-6 border border-gray-300 shadow-sm">WINNER WIN BY RUNS</div>
+                <div class="mt-4 text-base font-bold text-amber-700 uppercase flex items-center justify-center gap-2">
+                    <i class="ph-fill ph-trophy text-xl"></i> Man of the Match: <span id="s-mom" class="text-black bg-amber-100 px-3 py-1 rounded shadow-sm border border-amber-200">PLAYER NAME</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-8 text-gray-900">
+                <div>
+                    <h3 id="s-t1-head" class="font-bold text-lg mb-3 pb-2 border-b-2 border-indigo-200 text-indigo-900 uppercase">Team 1</h3>
+                    <table class="w-full text-sm text-left">
+                        <thead><tr class="text-gray-500 border-b border-gray-200"><th class="pb-2">Player</th><th class="pb-2 text-center">Runs</th><th class="pb-2 text-center">Wkts</th></tr></thead>
+                        <tbody id="s-t1-players"></tbody>
+                    </table>
+                </div>
+                <div>
+                    <h3 id="s-t2-head" class="font-bold text-lg mb-3 pb-2 border-b-2 border-emerald-200 text-emerald-900 uppercase">Team 2</h3>
+                    <table class="w-full text-sm text-left">
+                        <thead><tr class="text-gray-500 border-b border-gray-200"><th class="pb-2">Player</th><th class="pb-2 text-center">Runs</th><th class="pb-2 text-center">Wkts</th></tr></thead>
+                        <tbody id="s-t2-players"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="mt-12 text-center text-xs font-bold text-gray-400 uppercase border-t pt-4">System Generated Official Document</div>
+        </div>
+    </div>
+
+    <footer class="text-center py-6 mt-8 text-gray-500 text-sm font-semibold w-full border-t border-gray-200">
+        নকশা,নির্মাণ,প্রকাশনা ও পরিচর্যায় &copy; মডার্ণ স্পোর্টিং ক্লাব
+    </footer>
+    
+    <script>
+    // Google Maps Autocomplete Initialize (Updated for Single Input)
+    window.initAddressAutocomplete = function() {
+        const input = document.getElementById('reg-address');
+        if (!input) return;
+
+        const autocomplete = new google.maps.Places.Autocomplete(input, {
+            types: ['geocode', 'establishment'],
+            componentRestrictions: { country: ["in"] }
+        });
+
+        autocomplete.addListener('place_changed', function() {
+            const place = autocomplete.getPlace();
+            if (!place.geometry) {
+                console.log("কোনো ঠিকানা পাওয়া যায়নি।");
+                return;
+            }
+            input.value = place.formatted_address;
+        });
+    };
+
+    window.getCurrentGoogleLocation = function() {
+        const btn = event.currentTarget;
+        const originalText = btn.innerHTML;
+        const input = document.getElementById('reg-address');
+        
+        if (!navigator.geolocation) {
+            showToast("আপনার ব্রাউজার লোকেশন সাপোর্ট করে না।", true);
+            return;
+        }
+
+        btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Locating...';
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                const geocoder = new google.maps.Geocoder();
+                const latlng = { lat: parseFloat(lat), lng: parseFloat(lng) };
+
+                geocoder.geocode({ location: latlng }, (results, status) => {
+                    btn.innerHTML = originalText;
+                    if (status === "OK" && results[0]) {
+                        input.value = results[0].formatted_address;
+                        showToast("ঠিকানা পাওয়া গেছে! দয়া করে যাচাই করে নিন।");
+                    } else {
+                        showToast("সঠিক ঠিকানা খুঁজে পাওয়া যায়নি।", true);
+                    }
+                });
+            },
+            (error) => {
+                btn.innerHTML = originalText;
+                showToast("লোকেশন পারমিশন দেওয়া হয়নি বা পেতে সমস্যা হচ্ছে।", true);
+            }
+        );
+    };
+    
+    window.getLocation = function() {
+        const btn = event.currentTarget;
+        const originalText = btn.innerHTML;
+        
+        if (!navigator.geolocation) {
+            showToast("আপনার ব্রাউজার লোকেশন সাপোর্ট করে না।", true);
+            return;
+        }
+
+        btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Locating...';
+
+        navigator.geolocation.getCurrentPosition(
+            async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                const geocoder = new google.maps.Geocoder();
+                const latlng = { lat: parseFloat(lat), lng: parseFloat(lng) };
+
+                geocoder.geocode({ location: latlng }, (results, status) => {
+                    btn.innerHTML = originalText;
+
+                    if (status === "OK" && results[0]) {
+                        document.getElementById('reg-village').value = '';
+                        document.getElementById('reg-road').value = '';
+                        document.getElementById('reg-pin').value = '';
+
+                        for (const component of results[0].address_components) {
+                            const componentType = component.types[0];
+
+                            switch (componentType) {
+                                case "route": 
+                                    document.getElementById('reg-road').value = component.long_name; 
+                                    break;
+                                case "sublocality_level_1":
+                                case "locality": 
+                                    document.getElementById('reg-village').value = component.long_name; 
+                                    break;
+                                case "postal_code": 
+                                    document.getElementById('reg-pin').value = component.long_name; 
+                                    break;
+                            }
+                        }
+                        showToast("ঠিকানা পাওয়া গেছে! দয়া করে যাচাই করে নিন।");
+                    } else {
+                        showToast("সঠিক ঠিকানা খুঁজে পাওয়া যায়নি। ম্যানুয়ালি লিখুন।", true);
+                    }
+                });
+            },
+            (error) => {
+                btn.innerHTML = originalText;
+                if (error.code === error.PERMISSION_DENIED) {
+                    showToast("আপনি লোকেশন পারমিশন দেননি!", true);
+                } else {
+                    showToast("লোকেশন পেতে সমস্যা হচ্ছে।", true);
+                }
+            }
+        );
+    };
+    </script>
+    
+    <!-- FIREBASE RTDB CLOUD SYNC & APP LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getDatabase, ref, set, update, onValue, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+        const State = {
+            viewMode: 'public', isLoggedIn: false,
+            settings: { 
+                entryFee: 1000, upiId: 'modernsportingclub@idbi', playersLimit: 9, 
+                maxOversPerBowler: 2, totalOvers: 10, teamLimit: 16, date: '2026-12-25T09:00', 
+                ageLimit: 'Open for all',
+                rules: ["প্লেড প্লেয়ার খেলা নেই।"]
+            },
+            teams: [], matches: [], liveMatch: null, 
+            formPlayers: Array(7).fill(null).map(()=>({name:'', isHidden:false})), // Updated Object Structure
+            pendingRegistration: null, editTeamId: null, currentViewingTeam: null, editMatchId: null
+        };
+
+        let db, auth;
+
+        // Custom Utilities
+        window.showToast = function(msg, isError=false) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-xl transform transition-all duration-300 z-[100] font-bold ${isError ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'}`;
+            t.style.transform = 'translateY(0)'; t.style.opacity = '1';
+            setTimeout(() => { t.style.transform = 'translateY(20px)'; t.style.opacity = '0'; }, 3000);
+        };
+        window.showConfirm = function(msg, onConfirm, isSuccess = false) {
+            document.getElementById('confirm-msg').innerText = msg;
+            const iconDiv = document.getElementById('confirm-icon');
+            if(isSuccess) {
+                iconDiv.className = "w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl";
+                iconDiv.innerHTML = '<i class="ph ph-trophy"></i>';
+                document.getElementById('confirm-ok-btn').className = "px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition";
+            } else {
+                iconDiv.className = "w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl";
+                iconDiv.innerHTML = '<i class="ph ph-warning-circle"></i>';
+                document.getElementById('confirm-ok-btn').className = "px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition";
+            }
+            document.getElementById('confirmModal').classList.remove('hidden');
+            window._confirmCallback = onConfirm;
+        };
+        window.executeConfirm = function() {
+            document.getElementById('confirmModal').classList.add('hidden');
+            if(window._confirmCallback) window._confirmCallback();
+        };
+        window.closeConfirm = () => document.getElementById('confirmModal').classList.add('hidden');
+
+        // Fullscreen Toggle for Score Entry
+        window.toggleScoringFullscreen = function() {
+            const elem = document.getElementById('active-scoring-panel');
+            if (!document.fullscreenElement) {
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) { /* Safari */
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { /* IE11 */
+                    elem.msRequestFullscreen();
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE11 */
+                    document.msExitFullscreen();
+                }
+            }
+        };
+
+        // EXPOSURE LOGIC (For Hiding/Unhiding Players)
+        window.isTeamExposed = function(teamId) {
+            if(!teamId) return false;
+            // 1. Is in Live Match?
+            if (State.liveMatch && (State.liveMatch.batTeam.id === teamId || State.liveMatch.bowlTeam.id === teamId)) return true;
+            // 2. Has played a Completed Match?
+            const hasPlayed = State.matches.some(m => m.status === 'Completed' && (m.team1.id === teamId || m.team2.id === teamId));
+            return hasPlayed;
+        };
+
+        window.getDisplayName = function(pName, team) {
+            // If the player is NOT in the hidden list, return actual name
+            if (!team.hiddenPlayers || !team.hiddenPlayers.includes(pName)) return pName;
+            // If team is exposed (live or completed match), unhide name
+            if (isTeamExposed(team.id || team.regNo)) return pName;
+            // Otherwise keep it hidden
+            return 'XXXXXX';
+        };
+
+        // Firebase Initialization
+        async function initFirebase() {
+            try {
+                const config = {
+                    apiKey: "AIzaSyBQA2IeTFdmIquz_KIqrHWf54w9c8vjZjc",
+                    authDomain: "modern-sporting-club.firebaseapp.com",
+                    databaseURL: "https://modern-sporting-club-default-rtdb.firebaseio.com",
+                    projectId: "modern-sporting-club",
+                    storageBucket: "modern-sporting-club.firebasestorage.app",
+                    messagingSenderId: "651604493995",
+                    appId: "1:651604493995:web:ac77e2f18cf00c371c19ee",
+                    measurementId: "G-45V1D577G8"
+                };
+                const app = initializeApp(config); auth = getAuth(app); db = getDatabase(app); 
+
+                await signInAnonymously(auth);
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        document.getElementById('sync-status').classList.remove('sync-offline');
+                        document.getElementById('sync-status').classList.add('sync-active');
+                        const callout = document.getElementById('sync-callout');
+                        if(callout) callout.style.display = 'none'; // Hide Callout
+                        setupCloudListeners();
+                    }
+                });
+            } catch(e) { console.error("Firebase Init Error: ", e); renderPlayersForm('reg'); }
+        }
+
+        const safeFirebaseCall = async (promise) => {
+            if(!db) return true;
+            try { await promise; return true; } catch (e) { showToast("Network Error! Check connection.", true); return false; }
+        };
+
+        function setupCloudListeners() {
+            onValue(ref(db, 'system/settings'), (snapshot) => {
+                if(snapshot.exists()) { 
+                    const val = snapshot.val();
+                    State.settings = { ...State.settings, ...val }; 
+                    State.settings.rules = val.rules || ["প্লেড প্লেয়ার খেলা নেই।"];
+                    updateSettingsUI(); 
+                }
+            });
+            
+            onValue(ref(db, 'system/live_match'), (snapshot) => {
+                if(snapshot.exists()) { 
+                    let mData = snapshot.val();
+                    mData.currentOver = mData.currentOver || []; mData.history = mData.history || [];
+                    mData.striker = mData.striker || { name: '', runs: 0, balls: 0 };
+                    mData.runner = mData.runner || { name: '', runs: 0, balls: 0 };
+                    mData.bowler = mData.bowler || { name: '', runs: 0, wickets: 0, balls: 0 };
+                    mData.bowlerStats = mData.bowlerStats || {};
+                    mData.batterStats = mData.batterStats || {};
+                    mData.extras = mData.extras || 0; 
+                    State.liveMatch = mData; 
+                    updateScoreUI(); 
+                    
+                    if (document.getElementById('adm-tab-score').classList.contains('block')) {
+                        document.getElementById('score-setup-panel').classList.add('hidden');
+                        document.getElementById('active-scoring-panel').classList.remove('hidden');
+                    }
+                } else {
+                    State.liveMatch = null;
+                    document.getElementById('score-setup-panel').classList.remove('hidden');
+                    document.getElementById('active-scoring-panel').classList.add('hidden');
+                }
+            });
+            
+            onValue(ref(db, 'teams'), (snapshot) => {
+                State.teams = [];
+                if(snapshot.exists()) { snapshot.forEach(c => { State.teams.push({ id: c.key, ...c.val() }); }); }
+                renderTeamsTable();
+                populateManualMatchSelects();
+                renderPublicParticipants();
+            });
+            
+            onValue(ref(db, 'matches'), (snapshot) => {
+                State.matches = [];
+                if(snapshot.exists()) { snapshot.forEach(c => { State.matches.push(c.val()); }); }
+                renderAdminSchedules(); renderPublicFixtures(); populateScoreMatchSelect();
+            });
+            renderPlayersForm('reg');
+        }
+
+        window.renderAdminRules = function() {
+            const list = document.getElementById('admin-rules-list');
+            if(!list) return;
+            list.innerHTML = '';
+            (State.settings.rules || []).forEach((r, i) => {
+                list.innerHTML += `
+                <div class="flex items-center gap-2 bg-gray-50 p-3 rounded-lg border border-gray-200 shadow-sm">
+                    <span class="w-6 h-6 flex items-center justify-center bg-gray-200 rounded-full text-xs font-bold text-gray-500">${i+1}</span>
+                    <span class="flex-1 text-sm font-semibold text-gray-800">${r}</span>
+                    <button type="button" onclick="removeAdminRule(${i})" class="text-red-500 bg-red-50 p-2 rounded-lg hover:bg-red-100 hover:text-red-700 transition" title="Delete Rule"><i class="ph ph-trash text-lg"></i></button>
+                </div>`;
+            });
+        };
+
+        window.addAdminRule = function() {
+            const inp = document.getElementById('new-rule-input');
+            const val = inp.value.trim();
+            if(val) {
+                State.settings.rules = State.settings.rules || [];
+                State.settings.rules.push(val);
+                inp.value = '';
+                renderAdminRules();
+            }
+        };
+
+        window.removeAdminRule = function(index) {
+            if(State.settings.rules) {
+                State.settings.rules.splice(index, 1);
+                renderAdminRules();
+            }
+        };
+
+        function updateSettingsUI() {
+            const fee = parseInt(State.settings.entryFee) || 0;
+            const submitBtn = document.getElementById('submitRegBtn');
+            
+            if(submitBtn) {
+                if (fee === 0) {
+                    submitBtn.innerHTML = `<span>Submit Registration (Free)</span><i class="ph ph-check-circle"></i>`;
+                } else {
+                    submitBtn.innerHTML = `<span>Save & Proceed to Pay ₹<span id="ui-entryFeeBtn">${fee}</span></span><i class="ph ph-arrow-right"></i>`;
+                }
+            }
+
+            if(document.getElementById('set-fee')) document.getElementById('set-fee').value = State.settings.entryFee;
+            if(document.getElementById('set-upi')) document.getElementById('set-upi').value = State.settings.upiId;
+            if(document.getElementById('set-playersLimit')) document.getElementById('set-playersLimit').value = State.settings.playersLimit;
+            if(document.getElementById('set-totalOvers')) document.getElementById('set-totalOvers').value = State.settings.totalOvers || 10;
+            if(document.getElementById('set-teamLimit')) document.getElementById('set-teamLimit').value = State.settings.teamLimit;
+            if(document.getElementById('set-datetime')) document.getElementById('set-datetime').value = State.settings.date;
+            if(document.getElementById('set-age')) document.getElementById('set-age').value = State.settings.ageLimit || 'Open for all';
+            
+            renderAdminRules();
+            renderBowlerRules();
+        }
+     
+        window.saveSettings = async function(e) {
+            State.settings.entryFee = document.getElementById('set-fee').value;
+            State.settings.upiId = document.getElementById('set-upi').value;
+            State.settings.playersLimit = parseInt(document.getElementById('set-playersLimit').value);
+            State.settings.totalOvers = parseInt(document.getElementById('set-totalOvers').value);
+            State.settings.teamLimit = parseInt(document.getElementById('set-teamLimit').value);
+            State.settings.date = document.getElementById('set-datetime').value;
+            State.settings.ageLimit = document.getElementById('set-age').value;
+            
+            let btn = e ? e.target : null; 
+            if(btn) btn.innerHTML = '<i class="ph ph-spinner animate-spin text-xl"></i> Saving...';
+            
+            await safeFirebaseCall(set(ref(db, 'system/settings'), State.settings));
+            
+            if(btn) btn.innerHTML = 'Save All Settings to Cloud <i class="ph ph-cloud-arrow-up text-xl"></i>';
+            showToast("Settings and Rules Saved successfully");
+        };
+
+        // --- NEW: RULES MODAL PUBLIC LOGIC ---
+        window.openRulesModal = function() {
+            const cb = document.getElementById('reg-agree-checkbox');
+            if (cb.checked) {
+                cb.checked = false;
+                document.getElementById('custom-checkbox-ui').innerHTML = '';
+                document.getElementById('custom-checkbox-ui').classList.remove('bg-emerald-600', 'border-emerald-600');
+                document.getElementById('custom-checkbox-ui').classList.add('bg-white', 'border-gray-400');
+                return;
+            }
+
+            const container = document.getElementById('modal-rules-container');
+            container.innerHTML = '';
+
+            const dynamicRule = `টুর্ণামেন্ট সব নিয়ম মেনে চলবো`;
+            let combinedRules = [dynamicRule, ...(State.settings.rules || ["প্লেড প্লেয়ার খেলা নেই।"])];
+
+            combinedRules.forEach((rule, index) => {
+                container.innerHTML += `
+                <label class="flex items-start gap-4 p-4 bg-white hover:bg-gray-50 border border-gray-200 rounded-xl cursor-pointer transition shadow-sm">
+                    <input type="checkbox" class="rule-cb mt-1 w-5 h-5 text-amber-600 rounded focus:ring-amber-500 border-gray-300" onchange="checkAllRulesAccepted()">
+                    <span class="text-sm font-semibold text-gray-800 leading-snug">${rule}</span>
+                </label>`;
+            });
+
+            const btn = document.getElementById('accept-rules-btn');
+            btn.disabled = true;
+            btn.className = "flex-1 bg-gray-300 text-gray-500 py-3 rounded-xl font-bold transition cursor-not-allowed";
+
+            document.getElementById('rulesModal').classList.remove('hidden');
+        };
+
+        window.checkAllRulesAccepted = function() {
+            const checkboxes = document.querySelectorAll('.rule-cb');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            const btn = document.getElementById('accept-rules-btn');
+            
+            if (allChecked) {
+                btn.disabled = false;
+                btn.className = "flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl font-bold shadow-lg transition";
+            } else {
+                btn.disabled = true;
+                btn.className = "flex-1 bg-gray-300 text-gray-500 py-3 rounded-xl font-bold transition cursor-not-allowed";
+            }
+        };
+
+        window.acceptRegistrationRules = function() {
+            document.getElementById('rulesModal').classList.add('hidden');
+            document.getElementById('reg-agree-checkbox').checked = true;
+            document.getElementById('custom-checkbox-ui').innerHTML = '<i class="ph-bold ph-check text-white text-sm"></i>';
+            document.getElementById('custom-checkbox-ui').classList.remove('bg-white', 'border-gray-400');
+            document.getElementById('custom-checkbox-ui').classList.add('bg-emerald-600', 'border-emerald-600');
+        };
+
+        window.cancelRegistrationRules = function() {
+            document.getElementById('rulesModal').classList.add('hidden');
+            
+            document.getElementById('reg-agree-checkbox').checked = false;
+            document.getElementById('custom-checkbox-ui').innerHTML = '';
+            document.getElementById('custom-checkbox-ui').classList.remove('bg-emerald-600', 'border-emerald-600');
+            document.getElementById('custom-checkbox-ui').classList.add('bg-white', 'border-gray-400');
+
+            document.getElementById('registrationForm').reset();
+            State.formPlayers = Array(7).fill(null).map(()=>({name:'', isHidden:false}));
+            renderPlayersForm('reg');
+            
+            showToast("রেজিস্ট্রেশন বাতিল ও ফর্ম মুছে ফেলা হয়েছে!", true);
+        };
+
+        // HIDE PLAYER TOGGLE LOGIC
+        window.renderPlayersForm = function(mode = 'reg') {
+            const list = document.getElementById(mode === 'reg' ? 'playersList' : 'editPlayersList'); list.innerHTML = '';
+            State.formPlayers.forEach((p, i) => {
+                let pName = typeof p === 'string' ? p : (p.name || '');
+                let isHidden = typeof p === 'string' ? false : (p.isHidden || false);
+                
+                list.innerHTML += `<div class="flex items-center gap-2">
+                    <span class="w-6 text-xs font-bold text-gray-400">${i+1}.</span>
+                    <input type="text" value="${pName}" onchange="updateFormPlayer(${i}, this.value, '${mode}')" required class="flex-1 input-field !py-1.5 text-sm" placeholder="Player Name">
+                    <button type="button" onclick="togglePlayerHide(${i}, '${mode}')" class="p-1.5 rounded border ${isHidden ? 'bg-amber-100 text-amber-700 border-amber-300' : 'bg-gray-100 text-gray-400 border-gray-300'} transition" title="${isHidden ? 'Unhide this player' : 'Hide this player'}">
+                        <i class="ph ${isHidden ? 'ph-eye-closed' : 'ph-eye'} text-lg"></i>
+                    </button>
+                    ${i >= 7 ? `<button type="button" onclick="removeFormPlayer(${i}, '${mode}')" class="text-red-500 p-1 hover:text-red-700 transition"><i class="ph ph-x-circle text-lg"></i></button>` : `<div class="w-6"></div>`}
+                </div>`;
+            });
+        };
+
+        window.updateFormPlayer = (i, val, mode) => { 
+            if(typeof State.formPlayers[i] === 'string') State.formPlayers[i] = {name: val, isHidden: false};
+            else State.formPlayers[i].name = val; 
+        };
+        
+        window.togglePlayerHide = (i, mode) => {
+            if(typeof State.formPlayers[i] === 'string') State.formPlayers[i] = {name: State.formPlayers[i], isHidden: true};
+            else State.formPlayers[i].isHidden = !State.formPlayers[i].isHidden;
+            renderPlayersForm(mode);
+        };
+
+        window.removeFormPlayer = (i, mode) => { State.formPlayers.splice(i, 1); renderPlayersForm(mode); };
+        window.addPlayer = (mode) => { 
+            if (State.formPlayers.length < State.settings.playersLimit) { 
+                State.formPlayers.push({name: '', isHidden: false}); 
+                renderPlayersForm(mode); 
+            } else {
+                showToast(`Admin Limit: Max ${State.settings.playersLimit} players.`, true); 
+            }
+        };
+
+        let qrTimerInterval;
+
+        window.generateUPIPaymentUI = function(regNumber, amount) {
+            const upiLink = `upi://pay?pa=${State.settings.upiId}&pn=Modern%20Sporting%20Club&am=${amount}&cu=INR&tn=Reg_${regNumber}`;
+            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiLink)}`;
+            
+            document.getElementById('upi-init-box').innerHTML = `
+                <a href="${upiLink}" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg flex justify-center items-center gap-2 transition mb-3 animate-pulse text-center" onclick="document.getElementById('upi-verify-box').classList.remove('hidden')"><i class="ph ph-device-mobile"></i> Open UPI App to Pay</a>
+                <div class="mt-4 border-t pt-4 relative">
+                    <div id="qr-timer-display" class="text-sm text-red-600 font-bold mb-2 text-center bg-red-50 py-1 rounded">QR Expiring in: <span id="qr-countdown" class="font-mono text-lg">01:00</span></div>
+                    
+                    <div id="qr-image-container" class="transition-opacity duration-300">
+                        <p class="text-xs text-gray-500 mb-2 font-bold uppercase text-center">If App doesn't open, scan this QR code:</p>
+                        <img src="${qrUrl}" class="mx-auto border p-2 rounded-lg bg-white shadow-sm" alt="UPI QR">
+                        <button onclick="document.getElementById('upi-verify-box').classList.remove('hidden')" class="text-xs text-indigo-600 font-bold mt-2 underline w-full text-center">I have paid using QR</button>
+                    </div>
+                    
+                    <div id="qr-regenerate-container" class="hidden text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                        <i class="ph ph-clock-countdown text-3xl text-gray-400 mb-2"></i>
+                        <p class="text-sm text-gray-600 mb-3 font-semibold">QR Code Expired for Security.</p>
+                        <button onclick="generateUPIPaymentUI('${regNumber}', ${amount})" class="bg-gray-800 text-white px-5 py-2.5 rounded-lg font-bold shadow hover:bg-gray-700 transition flex items-center justify-center gap-2 mx-auto"><i class="ph ph-arrows-clockwise"></i> Generate QR Again</button>
+                    </div>
+                </div>
+            `;
+            startQRTimer(60);
+        };
+
+        window.startQRTimer = function(seconds) {
+            clearInterval(qrTimerInterval);
+            let timeLeft = seconds;
+            
+            qrTimerInterval = setInterval(() => {
+                timeLeft--;
+                const countdownEl = document.getElementById('qr-countdown');
+                const timerDisplay = document.getElementById('qr-timer-display');
+                const qrContainer = document.getElementById('qr-image-container');
+                const regenContainer = document.getElementById('qr-regenerate-container');
+
+                if(countdownEl) {
+                    let m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+                    let s = (timeLeft % 60).toString().padStart(2, '0');
+                    countdownEl.innerText = `${m}:${s}`;
+                }
+
+                if (timeLeft <= 0) {
+                    clearInterval(qrTimerInterval);
+                    if(timerDisplay) timerDisplay.classList.add('hidden');
+                    if(qrContainer) qrContainer.classList.add('hidden');
+                    if(regenContainer) regenContainer.classList.remove('hidden');
+                }
+            }, 1000);
+        };
+
+        // SHARED FUNCTION FOR PDF / RECEIPT GENERATION
+        window.populateReceiptData = function(team) {
+            document.getElementById('r-regNo').innerText = team.regNo || team.id;
+            document.getElementById('r-date').innerText = new Date(team.timestamp || Date.now()).toLocaleDateString();
+            document.getElementById('r-teamName').innerText = team.name;
+            document.getElementById('r-teamHead').innerText = team.head;
+            document.getElementById('r-phone').innerText = team.phone;
+            document.getElementById('r-address').innerText = team.address;
+            
+            document.getElementById('r-fee-container').style.display = team.status.includes('Paid') || State.settings.entryFee == 0 ? 'flex' : 'none';
+            
+            const rp = document.getElementById('r-playersList'); rp.innerHTML = '';
+            team.players.forEach((p, i) => rp.innerHTML += `<div><span class="text-gray-500 text-xs">${i+1}.</span> ${getDisplayName(p, team)}</div>`);
+
+            const rulesList = document.getElementById('r2-rules-list'); 
+            if(rulesList) {
+                rulesList.innerHTML = '';
+                let combinedRules = ["টুর্ণামেন্ট সব নিয়ম মেনে চলবো", ...(State.settings.rules || ["প্লেড প্লেয়ার খেলা নেই।"])];
+                combinedRules.forEach((r, i) => {
+                    rulesList.innerHTML += `<li class="mb-2 text-sm font-semibold text-black leading-snug"><span class="mr-2">${i+1}.</span>${r}</li>`;
+                });
+            }
+
+            document.getElementById('r2-teamHead-sign').innerText = team.head;
+        };
+
+        window.handleFormSubmit = async function(e) {
+            e.preventDefault();
+            if(State.teams.length >= State.settings.teamLimit) return showToast("Registration Closed. Total Teams Limit reached.", true);
+            
+            const btn = document.getElementById('submitRegBtn'); btn.innerHTML = "Processing..."; btn.disabled = true;
+
+            const regNumber = 'T' + Math.floor(1000 + Math.random() * 9000);
+            const fullAddress = document.getElementById('reg-address').value;
+            const entryFee = parseInt(State.settings.entryFee) || 0;
+            const regStatus = entryFee === 0 ? 'Approved' : 'Payment Pending';
+
+            State.pendingRegistration = {
+                regNo: regNumber, name: document.getElementById('reg-teamName').value.toUpperCase(), head: document.getElementById('reg-teamHead').value,
+                phone: document.getElementById('reg-phone').value, address: fullAddress,
+                players: State.formPlayers.map(p => typeof p === 'string' ? p : p.name).filter(n => n && n.trim() !== ''),
+                hiddenPlayers: State.formPlayers.filter(p => typeof p !== 'string' && p.isHidden).map(p => p.name).filter(n => n && n.trim() !== ''),
+                status: regStatus, timestamp: Date.now()
+            };
+
+            await safeFirebaseCall(set(ref(db, `teams/${regNumber}`), State.pendingRegistration));
+            
+            if (entryFee === 0) {
+                const team = State.pendingRegistration;
+                const formattedDate = formatToDDMMYYYY(team.timestamp);
+                
+                document.getElementById('r-regNo').innerText = team.regNo;
+                document.getElementById('r-date').innerText = formattedDate;
+                document.getElementById('r-teamName').innerText = team.name;
+                document.getElementById('r-teamHead').innerText = team.head;
+                document.getElementById('r-phone').innerText = team.phone;
+                document.getElementById('r-address').innerText = team.address;
+                document.getElementById('r-fee').innerText = '0';
+                document.getElementById('r-fee-words').innerText = numberToWords(0);
+                
+                const feeContainer = document.getElementById('r-fee-container');
+                if(feeContainer) feeContainer.style.display = 'flex';
+                
+                document.getElementById('r2-regNo').innerText = team.regNo;
+                document.getElementById('r2-date').innerText = formattedDate;
+                document.getElementById('r2-teamName').innerText = team.name;
+                document.getElementById('r2-address').innerText = team.address;
+                document.getElementById('r2-teamHead-sign').innerText = team.head;
+                
+                const rp = document.getElementById('r-playersList'); rp.innerHTML = '';
+                team.players.forEach((p, i) => rp.innerHTML += `<div><span class="text-gray-500 text-xs">${i+1}.</span> ${getDisplayName(p, team)}</div>`);
+                
+                const rulesEl = document.getElementById('r2-rules-list');
+                if(rulesEl) {
+                    let combinedRules = ["টুর্ণামেন্ট সব নিয়ম মেনে চলবো", ...(State.settings.rules || ["প্লেড প্লেয়ার খেলা নেই।"])];
+                    rulesEl.innerHTML = combinedRules.map((r, i) => `<li class="mb-2 text-sm font-semibold text-black leading-snug"><span class="mr-2">${i+1}.</span>${r}</li>`).join('');
+                }
+
+                document.getElementById('main-header').classList.add('hidden');
+                document.getElementById('public-view').classList.add('hidden');
+                document.getElementById('receipt-view').style.display = 'block';
+                window.scrollTo(0,0);
+                
+                btn.innerHTML = `<span>Submit Registration (Free)</span><i class="ph ph-check-circle"></i>`; 
+                btn.disabled = false;
+                
+                showToast("Registration Successful! Please download your receipt.");
+                document.getElementById('registrationForm').reset();
+                State.formPlayers = Array(7).fill(null).map(()=>({name:'', isHidden:false}));
+                renderPlayersForm('reg');
+                
+                return;
+            }
+
+            document.getElementById('pay-reg-no').innerText = regNumber; document.getElementById('pay-amount').innerText = State.settings.entryFee;
+            document.getElementById('pub-tab-entry').classList.add('hidden'); document.getElementById('payment-redirect-view').classList.remove('hidden');
+
+            generateUPIPaymentUI(regNumber, State.settings.entryFee);
+            btn.innerHTML = `<span>Save & Proceed to Pay ₹${State.settings.entryFee}</span><i class="ph ph-arrow-right"></i>`; btn.disabled = false;
+        };
+
+        window.verifyPayment = async function() {
+            if(!State.pendingRegistration) return;
+            const btn = document.getElementById('verify-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Verifying...';
+            btn.disabled = true;
+            
+            State.pendingRegistration.status = 'Paid / Approved';
+            await safeFirebaseCall(update(ref(db, `teams/${State.pendingRegistration.regNo}`), { status: 'Paid / Approved' }));
+            
+            setTimeout(() => {
+                const team = State.pendingRegistration;
+                populateReceiptData(team);
+                document.getElementById('r-fee-container').style.display = 'flex';
+                document.getElementById('r-fee').innerText = State.settings.entryFee;
+                document.getElementById('r-fee-words').innerText = numberToWords(State.settings.entryFee);
+                
+                document.getElementById('payment-redirect-view').classList.add('hidden');
+                document.getElementById('main-header').classList.add('hidden');
+                document.getElementById('public-view').classList.add('hidden');
+                document.getElementById('receipt-view').style.display = 'block';
+                window.scrollTo(0,0);
+                showToast("Payment Verified & Registration Complete!");
+                
+                document.getElementById('registrationForm').reset();
+                State.formPlayers = Array(7).fill(null).map(()=>({name:'', isHidden:false}));
+                renderPlayersForm('reg');
+                if(typeof qrTimerInterval !== 'undefined') clearInterval(qrTimerInterval);
+                
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                State.pendingRegistration = null;
+            }, 1500);
+        };
+        
+        window.goBackToApp = function() { 
+            document.getElementById('receipt-view').style.display = 'none'; 
+            document.getElementById('main-header').classList.remove('hidden');
+            document.getElementById('public-view').classList.remove('hidden'); 
+            switchTab('public', 'entry'); 
+            window.scrollTo(0,0); 
+        };
+
+        window.goBackToAppFromSummary = function() {
+            document.getElementById('summary-view').classList.add('hidden');
+            document.getElementById('main-header').classList.remove('hidden');
+            if (State.viewMode === 'admin') {
+                document.getElementById('admin-view').classList.remove('hidden');
+            } else {
+                document.getElementById('public-view').classList.remove('hidden');
+            }
+            window.scrollTo(0,0);
+        };
+
+        function renderTeamsTable() {
+            const tb = document.getElementById('admin-teams-table'); tb.innerHTML = ''; document.getElementById('team-count').innerText = State.teams.length;
+            State.teams.forEach(t => {
+                const isDis = t.status === 'Disqualified' || t.status === 'Eliminated';
+                const statusColor = t.status === 'Approved' ? 'text-emerald-600 bg-emerald-50' : 
+                                  (t.status.includes('Paid') ? 'text-blue-600 bg-blue-50' : 
+                                  (t.status === 'Eliminated' ? 'text-gray-600 bg-gray-200' :
+                                  (isDis ? 'text-red-600 bg-red-50' : 'text-amber-600 bg-amber-50')));
+                                  
+                tb.innerHTML += `<tr class="border-b hover:bg-gray-50 ${isDis ? 'opacity-60' : ''}">
+                    <td class="p-3 font-bold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition" onclick="showAdminTeamDetails('${t.id}')" title="Click to view full details & PDF">${t.name}</td>
+                    <td class="p-3">${t.head}</td><td class="p-3 font-mono text-xs">${t.phone}</td>
+                    <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold ${statusColor}">${t.status}</span></td>
+                    <td class="p-3 text-center space-x-1 whitespace-nowrap">
+                        ${!isDis ? `<button onclick="changeTeamStatus('${t.id}', 'Approved')" class="px-2 py-1 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded" title="Approve"><i class="ph ph-check-circle"></i></button>` : ''}
+                        <button onclick="openEditTeamModal('${t.id}')" class="px-2 py-1 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded" title="Edit Data"><i class="ph ph-pencil-simple"></i></button>
+                        ${!isDis ? `<button onclick="disqualifyTeam('${t.id}')" class="px-2 py-1 bg-orange-100 hover:bg-orange-200 text-orange-700 rounded" title="Disqualify/Ban"><i class="ph ph-prohibit"></i></button>` : `<button onclick="changeTeamStatus('${t.id}', 'Approved')" class="px-2 py-1 bg-emerald-100 text-emerald-700 rounded text-xs">Restore</button>`}
+                        <button onclick="deleteTeam('${t.id}')" class="px-2 py-1 bg-red-100 hover:bg-red-200 text-red-700 rounded" title="Delete Permanent"><i class="ph ph-trash"></i></button>
+                    </td></tr>`;
+            });
+        }
+        
+        window.changeTeamStatus = async (id, st) => { await safeFirebaseCall(update(ref(db, `teams/${id}`), { status: st })); showToast(`Status updated to ${st}`); };
+        window.disqualifyTeam = (id) => showConfirm("আপনি কি নিশ্চিত যে এই দলকে টুর্নামেন্ট থেকে বাতিল (Disqualify) করতে চান?", () => changeTeamStatus(id, 'Disqualified'));
+        window.deleteTeam = (id) => showConfirm("সতর্কতা: আপনি কি নিশ্চিত যে এই দলের সমস্ত ডাটা মুছে ফেলতে চান?", async () => { await safeFirebaseCall(remove(ref(db, `teams/${id}`))); showToast("Team deleted successfully."); });
+        
+        window.showAdminTeamDetails = function(teamId) {
+            const team = State.teams.find(t => t.id === teamId); if(!team) return;
+            State.currentViewingTeam = team;
+            document.getElementById('v-team-reg').innerText = team.regNo || team.id;
+            document.getElementById('v-team-phone').innerText = team.phone;
+            document.getElementById('v-team-name').innerText = team.name;
+            document.getElementById('v-team-head').innerText = team.head;
+            document.getElementById('v-team-address').innerText = team.address;
+            
+            const plist = document.getElementById('v-team-players'); plist.innerHTML = '';
+            team.players.forEach((p, i) => plist.innerHTML += `<div class="bg-white border p-1.5 rounded"><span class="text-gray-400 text-xs mr-1">${i+1}.</span> ${getDisplayName(p, team)}</div>`);
+            
+            document.getElementById('adminTeamDetailsModal').classList.remove('hidden');
+        };
+        window.closeAdminTeamDetailsModal = () => document.getElementById('adminTeamDetailsModal').classList.add('hidden');
+        
+        window.printCurrentTeamDetails = function() {
+            const team = State.currentViewingTeam; if(!team) return;
+            closeAdminTeamDetailsModal();
+            
+            const formattedDate = formatToDDMMYYYY(team.timestamp || Date.now());
+            const feePaid = parseInt(State.settings.entryFee) || 0;
+
+            document.getElementById('r-regNo').innerText = team.regNo || team.id;
+            document.getElementById('r-date').innerText = formattedDate;
+            document.getElementById('r-teamName').innerText = team.name;
+            document.getElementById('r-teamHead').innerText = team.head;
+            document.getElementById('r-phone').innerText = team.phone;
+            document.getElementById('r-address').innerText = team.address;
+            
+            const feeEl = document.getElementById('r-fee');
+            if(feeEl) feeEl.innerText = feePaid;
+            const feeWordsEl = document.getElementById('r-fee-words');
+            if(feeWordsEl) feeWordsEl.innerText = numberToWords(feePaid);
+            const feeContainer = document.getElementById('r-fee-container');
+            if(feeContainer) feeContainer.style.display = 'flex';
+            
+            document.getElementById('r2-regNo').innerText = team.regNo || team.id;
+            document.getElementById('r2-date').innerText = formattedDate;
+            document.getElementById('r2-teamName').innerText = team.name;
+            document.getElementById('r2-address').innerText = team.address;
+            document.getElementById('r2-teamHead-sign').innerText = team.head;
+            
+            const rp = document.getElementById('r-playersList'); rp.innerHTML = '';
+            team.players.forEach((p, i) => rp.innerHTML += `<div><span class="text-gray-500 text-xs">${i+1}.</span> ${getDisplayName(p, team)}</div>`);
+            
+            const rulesEl = document.getElementById('r2-rules-list');
+            if(rulesEl) {
+                let combinedRules = ["টুর্ণামেন্ট সব নিয়ম মেনে চলবো", ...(State.settings.rules || ["প্লেড প্লেয়ার খেলা নেই।"])];
+                rulesEl.innerHTML = combinedRules.map((r, i) => `<li class="mb-2 text-sm font-semibold text-black leading-snug"><span class="mr-2">${i+1}.</span>${r}</li>`).join('');
+            }
+
+            document.getElementById('admin-view').classList.add('hidden');
+            document.getElementById('main-header').classList.add('hidden');
+            document.getElementById('receipt-view').style.display = 'block';
+            window.scrollTo(0,0);
+        };
+
+        window.openEditTeamModal = function(id) {
+            const team = State.teams.find(t => t.id === id); if(!team) return;
+            State.editTeamId = id;
+            document.getElementById('edit-teamName').value = team.name; document.getElementById('edit-teamHead').value = team.head;
+            document.getElementById('edit-phone').value = team.phone; document.getElementById('edit-address').value = team.address;
+            
+            // Map strings back to objects for Editing (Keep original string names but apply hide flags)
+            State.formPlayers = team.players.map(p => ({
+                name: p,
+                isHidden: (team.hiddenPlayers || []).includes(p)
+            }));
+            
+            renderPlayersForm('edit');
+            document.getElementById('editTeamModal').classList.remove('hidden');
+        };
+        window.closeEditTeamModal = () => document.getElementById('editTeamModal').classList.add('hidden');
+        window.saveEditedTeam = async function(e) {
+            e.preventDefault();
+            const updatedData = {
+                name: document.getElementById('edit-teamName').value.toUpperCase(), head: document.getElementById('edit-teamHead').value,
+                phone: document.getElementById('edit-phone').value, address: document.getElementById('edit-address').value, 
+                players: State.formPlayers.map(p => typeof p === 'string' ? p : p.name).filter(n => n && n.trim() !== ''),
+                hiddenPlayers: State.formPlayers.filter(p => typeof p !== 'string' && p.isHidden).map(p => p.name).filter(n => n && n.trim() !== '')
+            };
+            await safeFirebaseCall(update(ref(db, `teams/${State.editTeamId}`), updatedData));
+            showToast("Team Updated Successfully"); closeEditTeamModal();
+        };
+
+        window.autoGenerateMatches = async function() {
+            const stage = document.getElementById('schedule-stage').value;
+            const approvedTeams = State.teams.filter(t => t.status === 'Approved');
+            if(approvedTeams.length < 2) return showToast("Not enough approved teams for pairing.", true);
+            const half = Math.floor(approvedTeams.length / 2);
+            for(let i=0; i<half; i++) {
+                const mId = 'M' + Date.now() + i;
+                await safeFirebaseCall(set(ref(db, `matches/${mId}`), { id: mId, team1: approvedTeams[i], team2: approvedTeams[approvedTeams.length - 1 - i], stage: stage, status: 'Scheduled', time: State.settings.date }));
+            }
+            showToast("Matches generated automatically.");
+        };
+
+        function renderAdminSchedules() {
+            const list = document.getElementById('admin-matches-list'); list.innerHTML = '';
+            State.matches.forEach(m => {
+                list.innerHTML += `
+                <div class="flex flex-col md:flex-row justify-between md:items-center bg-gray-50 p-4 rounded-lg border gap-4">
+                    <div>
+                        <span class="text-xs font-bold bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded">${m.stage}</span>
+                        <div class="font-bold text-lg mt-1">${m.team1.name} <span class="text-red-500 font-black text-sm mx-1">VS</span> ${m.team2.name}</div>
+                        ${m.status === 'Completed' ? `
+                            <div class="mt-2 text-sm font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded inline-block border border-emerald-100">${m.resultStr || 'Completed'}</div>
+                            <div class="text-xs font-bold text-amber-600 mt-1"><i class="ph-fill ph-trophy"></i> MoM: ${m.mom || 'N/A'}</div>
+                        ` : ''}
+                    </div>
+                    <div class="flex flex-col items-end gap-2">
+                        <span class="block text-sm font-bold ${m.status === 'Live' ? 'text-red-600 animate-pulse' : 'text-emerald-600'}">${m.status}</span>
+                        <div class="flex gap-2">
+                            ${m.status === 'Scheduled' ? `
+                            <button onclick="openEditMatchModal('${m.id}')" class="bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-blue-200 transition" title="Edit Teams"><i class="ph ph-pencil-simple"></i></button>
+                            <button onclick="jumpToScore('${m.id}')" class="bg-purple-600 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow hover:bg-purple-700 transition">Start Match</button>
+                            ` : ''}
+                            
+                            ${m.status === 'Live' ? `
+                            <button onclick="resumeScore('${m.id}')" class="bg-red-600 text-white px-4 py-1.5 rounded-lg text-sm font-bold shadow hover:bg-red-700 transition animate-pulse">Resume Live Match</button>
+                            ` : ''}
+
+                            ${m.status === 'Completed' ? `
+                            <button onclick="openMatchSummary('${m.id}')" class="bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-200 transition flex items-center gap-1" title="Download Summary"><i class="ph ph-download-simple"></i> Summary</button>
+                            ` : ''}
+                            
+                            <button onclick="deleteMatch('${m.id}')" class="bg-red-100 text-red-700 px-3 py-1.5 rounded-lg text-sm font-bold shadow-sm hover:bg-red-200 transition" title="Delete Match"><i class="ph ph-trash"></i></button>
+                        </div>
+                    </div>
+                </div>`;
+            });
+        }
+
+        window.deleteMatch = function(matchId) {
+            showConfirm("আপনি কি নিশ্চিত যে এই ম্যাচটি ডিলিট করতে চান?", async () => {
+                const match = State.matches.find(m => m.id === matchId);
+                await safeFirebaseCall(remove(ref(db, `matches/${matchId}`)));
+                if (match && match.status === 'Live') {
+                    await safeFirebaseCall(remove(ref(db, 'system/live_match')));
+                    State.liveMatch = null;
+                    document.getElementById('active-scoring-panel').classList.add('hidden');
+                    document.getElementById('score-setup-panel').classList.remove('hidden');
+                }
+                showToast("Match deleted successfully");
+            });
+        };
+
+        window.openEditMatchModal = function(matchId) {
+            const match = State.matches.find(m => m.id === matchId);
+            if(!match) return;
+            State.editMatchId = matchId; 
+            
+            const t1Select = document.getElementById('edit-match-team1');
+            const t2Select = document.getElementById('edit-match-team2');
+            t1Select.innerHTML = ''; t2Select.innerHTML = '';
+            
+            State.teams.forEach(t => {
+                const opt = `<option value="${t.id}">${t.name} (${t.status})</option>`;
+                t1Select.innerHTML += opt;
+                t2Select.innerHTML += opt;
+            });
+            
+            t1Select.value = match.team1.id;
+            t2Select.value = match.team2.id;
+            
+            document.getElementById('editMatchModal').classList.remove('hidden');
+        };
+
+        window.closeEditMatchModal = function() {
+            document.getElementById('editMatchModal').classList.add('hidden');
+        };
+
+        window.saveEditedMatch = async function(e) {
+            e.preventDefault();
+            const t1Id = document.getElementById('edit-match-team1').value;
+            const t2Id = document.getElementById('edit-match-team2').value;
+            
+            if(t1Id === t2Id) {
+                return showToast("দুটি দল একই হতে পারে না! দয়া করে আলাদা দল নির্বাচন করুন।", true);
+            }
+            
+            const team1 = State.teams.find(t => t.id === t1Id);
+            const team2 = State.teams.find(t => t.id === t2Id);
+            
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Saving...';
+            
+            await safeFirebaseCall(update(ref(db, `matches/${State.editMatchId}`), { team1: team1, team2: team2 }));
+            showToast("Match Teams updated successfully");
+            closeEditMatchModal();
+            btn.innerHTML = "Save Match";
+        };
+
+        function renderPublicFixtures() {
+            const list = document.getElementById('public-fixtures-list'); list.innerHTML = '';
+            if(State.matches.length === 0) list.innerHTML = `<p class="text-gray-500 text-center py-4">Schedules will be updated soon.</p>`;
+            State.matches.forEach(m => {
+                const isEnded = m.status === 'Completed';
+                list.innerHTML += `
+                <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col transition hover:shadow-md">
+                    <div class="flex justify-between items-center w-full">
+                        <div class="flex-1 text-right font-bold text-gray-800 cursor-pointer hover:text-emerald-700 transition" onclick="showPublicTeam('${m.id}', 1)" title="Click to view details">${m.team1.name}</div>
+                        <div class="px-4 text-center">
+                            <span class="text-[10px] font-bold bg-gray-100 px-2 py-1 rounded block mb-1">${m.stage}</span>
+                            ${isEnded ? `
+                                <div class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded">Ended</div>
+                                <button onclick="openMatchSummary('${m.id}')" class="mt-2 text-indigo-600 hover:text-indigo-800 flex flex-col items-center mx-auto" title="Download Summary PDF"><i class="ph ph-download-simple text-xl"></i></button>
+                            ` : `<span class="text-emerald-600 font-black">VS</span>`}
+                        </div>
+                        <div class="flex-1 text-left font-bold text-gray-800 cursor-pointer hover:text-emerald-700 transition" onclick="showPublicTeam('${m.id}', 2)" title="Click to view details">${m.team2.name}</div>
+                    </div>
+                    ${isEnded ? `
+                        <div class="w-full text-center mt-3 pt-3 border-t border-gray-100">
+                            <span class="text-sm font-bold text-emerald-700 block">${m.resultStr || ''}</span>
+                            <span class="text-[12px] font-bold text-amber-600 block mt-1"><i class="ph-fill ph-trophy"></i> Man of the Match: ${m.mom || 'N/A'}</span>
+                        </div>
+                    ` : ''}
+                </div>`
+            });
+        }
+
+        window.showPublicTeam = function(matchId, teamIndex) {
+            const match = State.matches.find(m => m.id === matchId); if(!match) return;
+            const team = teamIndex === 1 ? match.team1 : match.team2;
+            document.getElementById('pub-modal-teamName').innerText = team.name;
+            document.getElementById('pub-modal-address').innerText = team.address;
+            document.getElementById('pub-modal-head').innerText = team.head;
+            
+            document.getElementById('pub-modal-players').innerHTML = team.players.map(p => {
+                let displayName = getDisplayName(p, team);
+                let bgClass = displayName === 'XXXXXX' ? 'bg-gray-100 text-gray-500 border-gray-200' : 'bg-emerald-50 text-emerald-800 border-emerald-100';
+                return `<div class="${bgClass} px-2 py-1 rounded text-xs font-bold border">${displayName}</div>`;
+            }).join('');
+            
+            document.getElementById('publicTeamModal').classList.remove('hidden');
+        };
+
+        window.jumpToScore = function(matchId) { switchTab('admin', 'score'); document.getElementById('score-match-select').value = matchId; setupMatchContext(); };
+        window.resumeScore = function(matchId) {
+            if (State.liveMatch && State.liveMatch.matchId === matchId) {
+                switchTab('admin', 'score');
+                document.getElementById('score-setup-panel').classList.add('hidden');
+                document.getElementById('active-scoring-panel').classList.remove('hidden');
+                updateScoreUI();
+            } else {
+                showToast("Live match details unavailable right now. Try again.", true);
+            }
+        };
+
+        window.populateScoreMatchSelect = function() {
+            const sel = document.getElementById('score-match-select'); sel.innerHTML = '<option value="">Select a match...</option>';
+            State.matches.filter(m => m.status !== 'Completed').forEach(m => { sel.innerHTML += `<option value="${m.id}">${m.team1.name} vs ${m.team2.name}</option>`; });
+        };
+        window.setupMatchContext = function() {
+            const mId = document.getElementById('score-match-select').value; if(!mId) return;
+            const match = State.matches.find(m => m.id === mId);
+            document.getElementById('toss-winner').innerHTML = `<option value="${match.team1.id}">${match.team1.name}</option><option value="${match.team2.id}">${match.team2.name}</option>`;
+        };
+
+        window.startScoringSession = async function() {
+            const mId = document.getElementById('score-match-select').value; 
+            if(!mId) return showToast("Select a match", true);
+            
+            const isAnyMatchLive = State.matches.some(m => m.status === 'Live');
+            if (isAnyMatchLive) {
+                return showToast("ইতিমধ্যেই একটি লাইভ ম্যাচ চলছে! একসাথে একাধিক ম্যাচ লাইভ করা যাবে না।", true);
+            }
+
+            const match = State.matches.find(m => m.id === mId);
+            const tWinId = document.getElementById('toss-winner').value; 
+            const dec = document.getElementById('toss-decision').value;
+            let batTeam = (match.team1.id === tWinId && dec === 'Bat') || (match.team2.id === tWinId && dec === 'Bowl') ? match.team1 : match.team2;
+            let bowlTeam = batTeam.id === match.team1.id ? match.team2 : match.team1;
+
+            const tOvers = parseInt(State.settings.totalOvers) || 10;
+
+            const newState = { 
+                matchId: match.id, batTeam: batTeam, bowlTeam: bowlTeam, 
+                innings: 1, target: 0, totalOvers: tOvers,
+                score: 0, wickets: 0, balls: 0, extras: 0, 
+                striker: { name: '', runs: 0, balls: 0 }, runner: { name: '', runs: 0, balls: 0 }, 
+                bowler: { name: '', runs: 0, wickets: 0, balls: 0 }, 
+                bowlerStats: {}, batterStats: {}, currentOver: [], history: [] 
+            };
+
+            await safeFirebaseCall(update(ref(db, `matches/${match.id}`), { status: 'Live' }));
+            await safeFirebaseCall(set(ref(db, 'system/live_match'), newState)); 
+            State.liveMatch = newState;
+            document.getElementById('score-setup-panel').classList.add('hidden'); 
+            document.getElementById('active-scoring-panel').classList.remove('hidden');
+        };
+
+        window.autoEndInnings = async function() {
+            if (!State.liveMatch) return;
+            
+            State.liveMatch.innings1Data = {
+                batTeamId: State.liveMatch.batTeam.id,
+                bowlTeamId: State.liveMatch.bowlTeam.id,
+                score: State.liveMatch.score,
+                wickets: State.liveMatch.wickets,
+                overs: Math.floor(State.liveMatch.balls / 6) + '.' + (State.liveMatch.balls % 6)
+            };
+
+            State.liveMatch.target = State.liveMatch.score + 1;
+            State.liveMatch.innings = 2;
+            
+            const tempTeam = State.liveMatch.batTeam;
+            State.liveMatch.batTeam = State.liveMatch.bowlTeam;
+            State.liveMatch.bowlTeam = tempTeam;
+
+            State.liveMatch.score = 0;
+            State.liveMatch.wickets = 0;
+            State.liveMatch.balls = 0;
+            State.liveMatch.extras = 0; 
+            State.liveMatch.striker = { name: '', runs: 0, balls: 0 };
+            State.liveMatch.runner = { name: '', runs: 0, balls: 0 };
+            State.liveMatch.bowler = { name: '', runs: 0, wickets: 0, balls: 0 };
+            State.liveMatch.currentOver = [];
+            State.liveMatch.history = []; 
+            
+            const sSel = document.getElementById('sc-striker-select');
+            const rSel = document.getElementById('sc-runner-select');
+            const bSel = document.getElementById('sc-bowler-select');
+            if(sSel) sSel.value = ''; if(rSel) rSel.value = ''; if(bSel) bSel.value = '';
+
+            await safeFirebaseCall(set(ref(db, 'system/live_match'), State.liveMatch));
+            updateScoreUI();
+            showToast(`1st Innings Ended! Target is ${State.liveMatch.target}`);
+        };
+
+        window.endInnings = function() {
+            if (!State.liveMatch) return;
+            if (State.liveMatch.innings === 2) return showToast("Match already in 2nd Innings!", true);
+            showConfirm("আপনি কি প্রথম ইনিংস শেষ করে দ্বিতীয় ইনিংস (Target Set) শুরু করতে চান?", async () => {
+                await window.autoEndInnings();
+            });
+        };
+
+        window.handleMatchEnd = async function(winnerId, loserId, fallbackMessage) {
+            const match = State.matches.find(m => m.id === State.liveMatch.matchId);
+            if(!match) return;
+
+            if(State.liveMatch.striker.name) State.liveMatch.batterStats[State.liveMatch.striker.name] = {...State.liveMatch.striker};
+            if(State.liveMatch.runner.name) State.liveMatch.batterStats[State.liveMatch.runner.name] = {...State.liveMatch.runner};
+            if(State.liveMatch.bowler.name) State.liveMatch.bowlerStats[State.liveMatch.bowler.name] = {...State.liveMatch.bowler};
+
+            let winnerTeam = null;
+            let loserTeam = null;
+            let marginStr = fallbackMessage;
+            let mom = "N/A";
+
+            if (winnerId !== 'TIE') {
+                winnerTeam = winnerId === match.team1.id ? match.team1 : match.team2;
+                loserTeam = loserId === match.team1.id ? match.team1 : match.team2;
+                
+                if (State.liveMatch.innings1Data && winnerTeam.id === State.liveMatch.innings1Data.batTeamId) {
+                    let runsMargin = (State.liveMatch.target - 1) - State.liveMatch.score;
+                    marginStr = `${winnerTeam.name} WON BY ${runsMargin} RUNS`;
+                } else {
+                    let wktsMargin = (Math.min(winnerTeam.players.length, State.settings.playersLimit) - 1) - State.liveMatch.wickets;
+                    marginStr = `${winnerTeam.name} WON BY ${wktsMargin} WICKETS`;
+                }
+
+                await safeFirebaseCall(update(ref(db, `teams/${loserTeam.id}`), { status: 'Eliminated' }));
+
+                let maxPoints = -1;
+                winnerTeam.players.forEach(p => {
+                    let runs = State.liveMatch.batterStats[p] ? State.liveMatch.batterStats[p].runs : 0;
+                    let wkts = State.liveMatch.bowlerStats[p] ? State.liveMatch.bowlerStats[p].wickets : 0;
+                    let pts = runs + (wkts * 20); 
+                    if (pts > maxPoints) { maxPoints = pts; mom = p; }
+                });
+            }
+
+            await safeFirebaseCall(update(ref(db, `matches/${match.id}`), {
+                status: 'Completed',
+                winner: winnerTeam,
+                loser: loserTeam,
+                resultStr: marginStr,
+                mom: mom,
+                stats: {
+                    batterStats: State.liveMatch.batterStats || {},
+                    bowlerStats: State.liveMatch.bowlerStats || {},
+                },
+                innings1Data: State.liveMatch.innings1Data || null,
+                finalScore: { score: State.liveMatch.score, wickets: State.liveMatch.wickets, overs: Math.floor(State.liveMatch.balls / 6) + '.' + (State.liveMatch.balls % 6) }
+            }));
+
+            if (match.stage === 'Final' && winnerId !== 'TIE') {
+                showConfirm(`🏆 TOURNAMENT ENDED! 🏆\n\nWINNER / জয়ী: ${winnerTeam.name}\nRUNNER-UP: ${loserTeam.name}\nMoM: ${mom}`, () => { closeConfirm(); }, true);
+            } else {
+                showToast(`Match Completed! ${marginStr}`);
+            }
+
+            await safeFirebaseCall(remove(ref(db, 'system/live_match')));
+            State.liveMatch = null;
+            document.getElementById('active-scoring-panel').classList.add('hidden');
+            document.getElementById('score-setup-panel').classList.remove('hidden');
+            switchTab('admin', 'schedule');
+        };
+
+        window.openMatchSummary = function(matchId) {
+            const match = State.matches.find(m => m.id === matchId);
+            if (!match || !match.stats) return showToast("Summary data not available for this match.", true);
+
+            document.getElementById('s-stage').innerText = match.stage;
+            document.getElementById('s-team1-name').innerText = match.team1.name;
+            document.getElementById('s-team2-name').innerText = match.team2.name;
+            document.getElementById('s-result').innerText = match.resultStr || "Match Completed";
+            document.getElementById('s-mom').innerText = match.mom || "N/A";
+            
+            document.getElementById('s-t1-head').innerText = match.team1.name;
+            document.getElementById('s-t2-head').innerText = match.team2.name;
+
+            const t1Body = document.getElementById('s-t1-players');
+            const t2Body = document.getElementById('s-t2-players');
+            t1Body.innerHTML = ''; t2Body.innerHTML = '';
+
+            match.team1.players.forEach(p => {
+                let r = match.stats.batterStats[p] ? match.stats.batterStats[p].runs : 0;
+                let w = match.stats.bowlerStats[p] ? match.stats.bowlerStats[p].wickets : 0;
+                t1Body.innerHTML += `<tr class="border-b border-gray-100 last:border-0"><td class="py-2 font-bold">${getDisplayName(p, match.team1)}</td><td class="py-2 text-center text-gray-700">${r}</td><td class="py-2 text-center text-gray-700">${w}</td></tr>`;
+            });
+
+            match.team2.players.forEach(p => {
+                let r = match.stats.batterStats[p] ? match.stats.batterStats[p].runs : 0;
+                let w = match.stats.bowlerStats[p] ? match.stats.bowlerStats[p].wickets : 0;
+                t2Body.innerHTML += `<tr class="border-b border-gray-100 last:border-0"><td class="py-2 font-bold">${getDisplayName(p, match.team2)}</td><td class="py-2 text-center text-gray-700">${r}</td><td class="py-2 text-center text-gray-700">${w}</td></tr>`;
+            });
+
+            document.getElementById('admin-view').classList.add('hidden');
+            document.getElementById('public-view').classList.add('hidden');
+            document.getElementById('main-header').classList.add('hidden');
+            document.getElementById('summary-view').classList.remove('hidden');
+            window.scrollTo(0,0);
+        };
+
+        window.updateBatsmenUI = async function() {
+            if(!State.liveMatch) return;
+            const sName = document.getElementById('sc-striker-select').value; 
+            const rName = document.getElementById('sc-runner-select').value;
+            
+            if(sName && State.liveMatch.striker.name !== sName) {
+                if (State.liveMatch.striker.name) State.liveMatch.batterStats[State.liveMatch.striker.name] = {...State.liveMatch.striker};
+                State.liveMatch.striker = State.liveMatch.batterStats[sName] ? {...State.liveMatch.batterStats[sName]} : { name: sName, runs: 0, balls: 0 };
+            }
+            if(rName && State.liveMatch.runner.name !== rName) {
+                if (State.liveMatch.runner.name) State.liveMatch.batterStats[State.liveMatch.runner.name] = {...State.liveMatch.runner};
+                State.liveMatch.runner = State.liveMatch.batterStats[rName] ? {...State.liveMatch.batterStats[rName]} : { name: rName, runs: 0, balls: 0 };
+            }
+            safeFirebaseCall(set(ref(db, 'system/live_match'), State.liveMatch)); 
+            updateScoreUI();
+        };
+
+        window.updateBowlerUI = async function() {
+            if(!State.liveMatch) return;
+            const bName = document.getElementById('sc-bowler-select').value; 
+            if(!bName) return;
+            
+            if(State.liveMatch.bowler.name && State.liveMatch.bowler.name !== bName) {
+                State.liveMatch.bowlerStats[State.liveMatch.bowler.name] = {...State.liveMatch.bowler};
+            }
+            State.liveMatch.bowler = State.liveMatch.bowlerStats[bName] ? {...State.liveMatch.bowlerStats[bName]} : { name: bName, runs: 0, wickets: 0, balls: 0 };
+            safeFirebaseCall(set(ref(db, 'system/live_match'), State.liveMatch)); 
+            updateScoreUI();
+        };
+
+        window.swapStrikeManual = async function() {
+            if(!State.liveMatch) return;
+            const temp = State.liveMatch.striker; State.liveMatch.striker = State.liveMatch.runner; State.liveMatch.runner = temp;
+            safeFirebaseCall(set(ref(db, 'system/live_match'), State.liveMatch)); updateScoreUI();
+        };
+
+        function swapStrikeStateOnly() {
+            if(!State.liveMatch) return;
+            const temp = State.liveMatch.striker; State.liveMatch.striker = State.liveMatch.runner; State.liveMatch.runner = temp;
+        }
+
+        window.showWicketModal = function() {
+            if(!State.liveMatch || !State.liveMatch.striker.name) return showToast("Please select a batsman first.", true);
+            document.getElementById('wkt-striker-opt').innerText = getDisplayName(State.liveMatch.striker.name, State.liveMatch.batTeam);
+            document.getElementById('wkt-striker-val').value = State.liveMatch.striker.name;
+            document.getElementById('wkt-runner-opt').innerText = State.liveMatch.runner.name ? getDisplayName(State.liveMatch.runner.name, State.liveMatch.batTeam) : 'Runner';
+            document.getElementById('wkt-runner-val').value = State.liveMatch.runner.name;
+            document.getElementById('wicketModal').classList.remove('hidden');
+        };
+
+        window.confirmWicket = function() {
+            const outB = document.querySelector('input[name="outBatter"]:checked').value;
+            if(!outB) return showToast("Select who is out", true);
+            const type = document.getElementById('wkt-type').value;
+            const runs = parseInt(document.getElementById('wkt-runs').value);
+            document.getElementById('wicketModal').classList.add('hidden');
+            processBall(runs, 'WICKET', { outBatter: outB, type: type });
+        };
+
+        window.undoLastBall = async function() {
+            if(!State.liveMatch || !State.liveMatch.history || State.liveMatch.history.length === 0) return showToast("Nothing to undo in this innings", true);
+            showConfirm("আপনি কি সর্বশেষ বলটি ডিলিট (Undo) করতে চান?", async () => {
+                try {
+                    const poppedStateStr = State.liveMatch.history.pop();
+                    const poppedState = JSON.parse(poppedStateStr);
+                    poppedState.history = State.liveMatch.history; 
+                    State.liveMatch = poppedState; 
+                    await safeFirebaseCall(set(ref(db, 'system/live_match'), State.liveMatch));
+                    updateScoreUI();
+                    showToast("Last ball removed/restored.");
+                } catch(e) {
+                    console.error("Undo error", e);
+                    showToast("Failed to undo ball.", true);
+                }
+            });
+        };
+
+        let _isProcessingBall = false;
+        window.processBall = async function(runs, type, wktData = null) {
+            if(_isProcessingBall) return;
+            if(!State.liveMatch) return;
+            if(!State.liveMatch.striker.name || !State.liveMatch.bowler.name) return showToast("Please select Striker & Bowler", true);
+            if(State.liveMatch.innings === 2 && State.liveMatch.score >= State.liveMatch.target) return showToast("Match is already won by Batting Team!", true);
+
+            _isProcessingBall = true;
+
+            try {
+                State.liveMatch.history = State.liveMatch.history || [];
+                const snapshot = { ...State.liveMatch, history: [] };
+                State.liveMatch.history.push(JSON.stringify(snapshot));
+
+                let isLegal = true, isExtra = false, displayStr = runs.toString();
+                let teamRuns = runs, bowlerRuns = 0, batRunsToBatter = 0, extraRunsToTeam = 0;
+
+                if(type === 'RUN') {
+                    bowlerRuns = runs; batRunsToBatter = runs; if(runs === 0) displayStr = '•';
+                } else if(type === 'WD') {
+                    isLegal = false; isExtra = true; 
+                    teamRuns = runs + 1; bowlerRuns = runs + 1; extraRunsToTeam = runs + 1;
+                    displayStr = runs > 0 ? `WD+${runs}` : 'WD';
+                } else if(type === 'NB') {
+                    isLegal = false; isExtra = true; 
+                    teamRuns = runs + 1; bowlerRuns = runs + 1; extraRunsToTeam = 1; batRunsToBatter = runs;
+                    displayStr = runs > 0 ? `NB+${runs}` : 'NB';
+                } else if(type === 'BYE') {
+                    isExtra = true; bowlerRuns = 0; extraRunsToTeam = runs;
+                    displayStr = `${runs}B`;
+                } else if(type === 'LB') {
+                    isExtra = true; bowlerRuns = 0; extraRunsToTeam = runs;
+                    displayStr = `${runs}LB`;
+                } else if(type === 'WICKET') {
+                    teamRuns = runs; bowlerRuns = runs; batRunsToBatter = runs;
+                    displayStr = 'W';
+                }
+
+                State.liveMatch.score += teamRuns;
+                State.liveMatch.extras = (State.liveMatch.extras || 0) + extraRunsToTeam;
+                State.liveMatch.bowler.runs += bowlerRuns;
+                
+                State.liveMatch.striker.runs += batRunsToBatter; 
+                
+                if (type !== 'WD') State.liveMatch.striker.balls++;
+                if (isLegal) { State.liveMatch.balls++; State.liveMatch.bowler.balls++; }
+
+                let tagStr = `<span class="bg-gray-200 px-2 py-1 rounded text-gray-800 shadow-sm">${displayStr}</span>`;
+                if(!isLegal) tagStr = `<span class="bg-blue-100 px-2 py-1 rounded text-blue-800 font-bold border border-blue-200">${displayStr}</span>`;
+                else if(type === 'WICKET') tagStr = `<span class="bg-red-600 px-2 py-1 rounded text-white font-bold shadow-md">${displayStr}</span>`;
+                else if(runs >= 4 && type === 'RUN') tagStr = `<span class="bg-emerald-600 px-2 py-1 rounded text-white font-bold shadow-md">${displayStr}</span>`;
+                State.liveMatch.currentOver.push(tagStr);
+
+                if(type === 'WICKET' && wktData) {
+                    State.liveMatch.wickets++;
+                    if(wktData.type !== 'Run Out') State.liveMatch.bowler.wickets++;
+                    
+                    const outBKey = wktData.outBatter === State.liveMatch.striker.name ? 'striker' : 'runner';
+                    State.liveMatch.batterStats[State.liveMatch[outBKey].name] = {...State.liveMatch[outBKey]}; 
+                    State.liveMatch[outBKey] = { name: '', runs: 0, balls: 0 }; 
+                }
+
+                if(runs % 2 !== 0) swapStrikeStateOnly();
+
+                if(isLegal && State.liveMatch.balls % 6 === 0 && State.liveMatch.balls > 0) {
+                    State.liveMatch.currentOver = [];
+                    swapStrikeStateOnly(); 
+                    
+                    State.liveMatch.bowlerStats[State.liveMatch.bowler.name] = {...State.liveMatch.bowler};
+                    State.liveMatch.bowler = { name: '', runs: 0, wickets: 0, balls: 0 }; 
+                }
+
+                await safeFirebaseCall(set(ref(db, 'system/live_match'), State.liveMatch)); 
+                updateScoreUI();
+                
+                setTimeout(() => {
+                    if (!State.liveMatch) {
+                        _isProcessingBall = false;
+                        return;
+                    }
+                    const batPlayerLimit = Math.min(State.liveMatch.batTeam.players.length, State.settings.playersLimit) - 1;
+
+                    if (State.liveMatch.innings === 1) {
+                        const isAllOut1 = State.liveMatch.wickets >= batPlayerLimit;
+                        const isMaxOvers1 = State.liveMatch.balls >= State.liveMatch.totalOvers * 6;
+                        if (isAllOut1 || isMaxOvers1) {
+                            showToast(isAllOut1 ? "All Out! 1st Innings Ended." : "Max overs reached! 1st Innings Ended.");
+                            setTimeout(() => { window.autoEndInnings(); _isProcessingBall = false; }, 1500);
+                            return;
+                        }
+                    } else if (State.liveMatch.innings === 2) {
+                        const isAllOut2 = State.liveMatch.wickets >= batPlayerLimit;
+                        const isMaxOvers2 = State.liveMatch.balls >= State.liveMatch.totalOvers * 6;
+                        const isTargetReached = State.liveMatch.score >= State.liveMatch.target;
+
+                        if (isTargetReached) {
+                            setTimeout(() => { window.handleMatchEnd(State.liveMatch.batTeam.id, State.liveMatch.bowlTeam.id, `${State.liveMatch.batTeam.name} Won!`); _isProcessingBall = false; }, 1500);
+                            return;
+                        } else if (isAllOut2 || isMaxOvers2) {
+                            if (State.liveMatch.score >= State.liveMatch.target) {
+                                setTimeout(() => { window.handleMatchEnd(State.liveMatch.batTeam.id, State.liveMatch.bowlTeam.id, `${State.liveMatch.batTeam.name} Won!`); _isProcessingBall = false; }, 1500);
+                                return;
+                            } else if (State.liveMatch.score === State.liveMatch.target - 1) {
+                                setTimeout(() => { window.handleMatchEnd('TIE', 'TIE', "Match Tied!"); _isProcessingBall = false; }, 1500);
+                                return;
+                            } else {
+                                setTimeout(() => { window.handleMatchEnd(State.liveMatch.bowlTeam.id, State.liveMatch.batTeam.id, `${State.liveMatch.bowlTeam.name} Won!`); _isProcessingBall = false; }, 1500);
+                                return;
+                            }
+                        }
+                    }
+                    _isProcessingBall = false;
+                }, 100);
+
+            } catch (e) {
+                console.error("Ball Processing Error", e);
+                _isProcessingBall = false;
+            }
+        };
+
+        function updateScoreUI() {
+            const lm = State.liveMatch; if(!lm) return;
+            const oversStr = `${Math.floor(lm.balls / 6)}.${lm.balls % 6}`;
+            
+            let targetHtmlAdmin = ''; let targetHtmlPublic = '';
+            if (lm.innings === 2) {
+                const reqRuns = lm.target - lm.score;
+                const ballsLeft = (lm.totalOvers * 6) - lm.balls;
+                let matchStatus = `Need ${reqRuns > 0 ? reqRuns : 0} runs in ${ballsLeft > 0 ? ballsLeft : 0} balls`;
+                if (reqRuns <= 0) matchStatus = `<span class="text-emerald-400 font-black">BATTING TEAM WON!</span>`;
+                else if (ballsLeft <= 0 || lm.wickets >= Math.min(lm.batTeam.players.length, State.settings.playersLimit) - 1) matchStatus = `<span class="text-red-400 font-black">BOWLING TEAM WON!</span>`;
+                
+                targetHtmlAdmin = `
+                    <div class="bg-indigo-900 border border-indigo-500/50 text-indigo-100 p-2 md:p-3 rounded-lg mt-2 flex justify-between items-center text-sm shadow-inner">
+                        <div class="font-bold tracking-widest text-white flex items-center gap-2"><i class="ph-fill ph-target"></i> TARGET: ${lm.target}</div>
+                        <div class="font-bold text-yellow-300 animate-pulse bg-black/20 px-3 py-1 rounded">${matchStatus}</div>
+                    </div>`;
+                    
+                targetHtmlPublic = `
+                    <div class="bg-yellow-400 text-yellow-900 p-3 rounded-lg mt-4 flex justify-between items-center text-sm font-bold shadow-lg border-2 border-yellow-500">
+                        <div class="flex items-center gap-1 uppercase tracking-widest"><i class="ph-fill ph-crosshair"></i> TARGET: ${lm.target}</div>
+                        <div class="animate-pulse bg-white px-3 py-1 rounded-md shadow-sm">${matchStatus}</div>
+                    </div>`;
+            }
+
+            if(document.getElementById('sc-total-score')) {
+                const sSel = document.getElementById('sc-striker-select'); const rSel = document.getElementById('sc-runner-select'); const bSel = document.getElementById('sc-bowler-select');
+                
+                sSel.innerHTML = '<option value="">Select...</option>'; 
+                rSel.innerHTML = '<option value="">Select...</option>';
+                
+                lm.batTeam.players.forEach(p => { 
+                    const isOut = lm.batterStats && lm.batterStats[p];
+                    const isStriker = lm.striker.name === p;
+                    const isRunner = lm.runner.name === p;
+                    
+                    const pDisp = getDisplayName(p, lm.batTeam);
+                    
+                    if (isOut && !isStriker && !isRunner) {
+                        const opt = `<option value="${p}" disabled class="text-red-500 bg-red-50 italic">${pDisp} (Out)</option>`; 
+                        sSel.innerHTML += opt; rSel.innerHTML += opt; 
+                    } else {
+                        const opt = `<option value="${p}">${pDisp}</option>`; 
+                        sSel.innerHTML += opt; rSel.innerHTML += opt; 
+                    }
+                });
+                sSel.value = lm.striker.name || ''; 
+                rSel.value = lm.runner.name || '';
+
+                bSel.innerHTML = '<option value="">Select Bowler...</option>';
+                
+                let bowlerRulesList = State.settings.bowlerRules || [{bowlers: 11, overs: 2}];
+                let allowedLimits = [];
+                bowlerRulesList.forEach(r => {
+                    let maxBalls = r.overs === 'unlimited' ? Infinity : parseInt(r.overs) * 6;
+                    for(let i=0; i < parseInt(r.bowlers); i++) allowedLimits.push(maxBalls);
+                });
+                allowedLimits.sort((a, b) => b - a); 
+
+                let currentStats = [];
+                lm.bowlTeam.players.forEach(p => {
+                    let bBalls = lm.bowlerStats[p] ? lm.bowlerStats[p].balls : 0;
+                    if (lm.bowler.name === p) bBalls = lm.bowler.balls; 
+                    if (bBalls > 0) currentStats.push({ name: p, balls: bBalls });
+                });
+
+                lm.bowlTeam.players.forEach(p => {
+                    let bBalls = lm.bowlerStats[p] ? lm.bowlerStats[p].balls : 0;
+                    if (lm.bowler.name === p) bBalls = lm.bowler.balls;
+
+                    let canBowl = true;
+                    
+                    if (bBalls > 0 && (bBalls % 6 !== 0)) {
+                        canBowl = true;
+                    } else {
+                        let projectedStats = currentStats.map(s => ({...s}));
+                        let existing = projectedStats.find(s => s.name === p);
+                        if (existing) existing.balls += 1; 
+                        else projectedStats.push({ name: p, balls: 1 });
+                        
+                        projectedStats.sort((a, b) => b.balls - a.balls); 
+                        
+                        for(let i = 0; i < projectedStats.length; i++) {
+                            let allowed = allowedLimits[i] !== undefined ? allowedLimits[i] : 0;
+                            if (projectedStats[i].balls > allowed) {
+                                canBowl = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    const isCurrentBowler = lm.bowler.name === p;
+                    const pDisp = getDisplayName(p, lm.bowlTeam);
+
+                    if (!canBowl && !isCurrentBowler) {
+                        bSel.innerHTML += `<option value="${p}" disabled class="text-gray-400 bg-gray-100 italic">${pDisp} (Limit Reached: ${Math.floor(bBalls/6)}.${bBalls%6} Ov)</option>`;
+                    } else {
+                        bSel.innerHTML += `<option value="${p}">${pDisp} (${Math.floor(bBalls/6)}.${bBalls%6} Ov)</option>`;
+                    }
+                });
+
+
+                bSel.value = lm.bowler.name || '';
+
+                document.getElementById('sc-total-score').innerText = `${lm.score} - ${lm.wickets}`; document.getElementById('sc-overs').innerText = oversStr;
+                document.getElementById('sc-total-overs-disp').innerText = lm.totalOvers;
+                document.getElementById('sc-extras').innerText = lm.extras || 0;
+                document.getElementById('sc-batting-team').innerText = lm.batTeam.name; document.getElementById('sc-bowling-team').innerText = lm.bowlTeam.name;
+                document.getElementById('sc-striker-run').innerText = lm.striker.runs; document.getElementById('sc-striker-ball').innerText = lm.striker.balls;
+                document.getElementById('sc-runner-run').innerText = lm.runner.runs; document.getElementById('sc-runner-ball').innerText = lm.runner.balls;
+                document.getElementById('sc-bowler-runs').innerText = lm.bowler.runs; document.getElementById('sc-bowler-wkts').innerText = lm.bowler.wickets;
+                document.getElementById('sc-bowler-overs').innerText = `${Math.floor(lm.bowler.balls / 6)}.${lm.bowler.balls % 6}`;
+                document.getElementById('sc-this-over').innerHTML = lm.currentOver.join('') || '<span class="text-sm font-normal text-gray-400">Start over...</span>';
+                
+                const badge = document.getElementById('sc-innings-badge');
+                if(lm.innings === 2) { badge.innerText = "2nd Innings"; badge.className = "ml-2 bg-indigo-500 text-white text-[10px] px-2 py-1 rounded font-black uppercase"; document.getElementById('end-innings-btn').classList.add('hidden'); } 
+                else { badge.innerText = "1st Innings"; badge.className = "ml-2 bg-yellow-500 text-yellow-900 text-[10px] px-2 py-1 rounded font-black uppercase"; document.getElementById('end-innings-btn').classList.remove('hidden'); }
+                document.getElementById('sc-target-admin-container').innerHTML = targetHtmlAdmin;
+            }
+
+            document.getElementById('public-live-scoreboard').innerHTML = `
+                <div class="bg-gray-900 text-white rounded-xl p-6 shadow-2xl relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
+                    <div class="flex justify-between items-center border-b border-gray-700 pb-4 mb-4">
+                        <div><span class="flex items-center gap-2 text-red-400 text-xs font-bold uppercase tracking-widest"><span class="animate-pulse h-2 w-2 bg-red-500 rounded-full"></span> Live Sync Active</span></div>
+                        <div class="text-[10px] bg-gray-800 px-2 py-1 rounded uppercase tracking-widest font-bold text-gray-400">${lm.innings === 2 ? '2nd Innings' : '1st Innings'}</div>
+                    </div>
+                    <div class="flex justify-between items-end mb-6"><div><h2 class="text-2xl font-black text-white">${lm.batTeam.name}</h2><div class="text-5xl font-black mt-2 tracking-tighter text-yellow-400">${lm.score}<span class="text-2xl text-gray-400">/${lm.wickets}</span></div><div class="text-sm text-gray-400 mt-1">Overs: <span class="font-bold text-white">${oversStr}</span> <span class="text-gray-600">/ ${lm.totalOvers}</span> &nbsp;&bull;&nbsp; <span class="text-yellow-400 font-bold">Extras: ${lm.extras || 0}</span></div></div><div class="text-right"><h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Bowling</h3><div class="font-bold text-lg">${lm.bowlTeam.name}</div><div class="text-sm text-emerald-400 mt-1">${getDisplayName(lm.bowler.name, lm.bowlTeam) || 'Next Bowler'} (${Math.floor(lm.bowler.balls/6)}.${lm.bowler.balls%6} Ov)</div></div></div>
+                    ${targetHtmlPublic}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-700 pt-4 mt-4"><div class="bg-white/5 p-3 rounded"><div class="text-xs text-gray-400 mb-2 uppercase font-bold tracking-widest">Batting</div><div class="font-bold flex justify-between text-sm mb-1 ${lm.striker.name ? 'text-white' : 'text-gray-600'}"><span>${getDisplayName(lm.striker.name, lm.batTeam) || 'Striker'} *</span> <span>${lm.striker.runs}(${lm.striker.balls})</span></div><div class="font-bold flex justify-between text-sm ${lm.runner.name ? 'text-gray-300' : 'text-gray-600'}"><span>${getDisplayName(lm.runner.name, lm.batTeam) || 'Runner'}</span> <span>${lm.runner.runs}(${lm.runner.balls})</span></div></div><div class="bg-white/5 p-3 rounded flex flex-col justify-center"><div class="text-xs text-gray-400 mb-2 uppercase font-bold tracking-widest">This Over</div><div class="flex gap-1 flex-wrap text-sm">${lm.currentOver.length > 0 ? lm.currentOver.join('') : '<span class="text-gray-600">.</span>'}</div></div></div>
+                </div>`;
+        }
+
+        function populateManualMatchSelects() {
+            const t1 = document.getElementById('manual-match-t1');
+            const t2 = document.getElementById('manual-match-t2');
+            if(!t1 || !t2) return;
+            
+            t1.innerHTML = '<option value="">Select Team 1...</option>';
+            t2.innerHTML = '<option value="">Select Team 2...</option>';
+            
+            const approvedTeams = State.teams.filter(t => t.status === 'Approved' || t.status.includes('Paid'));
+            
+            approvedTeams.forEach(t => {
+                const opt = `<option value="${t.id}">${t.name}</option>`;
+                t1.innerHTML += opt;
+                t2.innerHTML += opt;
+            });
+        }
+
+        window.createManualMatch = async function() {
+            const t1Id = document.getElementById('manual-match-t1').value;
+            const t2Id = document.getElementById('manual-match-t2').value;
+            const stage = document.getElementById('manual-match-stage').value;
+
+            if(!t1Id || !t2Id) return showToast("দয়া করে দুটি দল নির্বাচন করুন", true);
+            if(t1Id === t2Id) return showToast("দুটি দল একই হতে পারে না!", true);
+
+            const team1 = State.teams.find(t => t.id === t1Id);
+            const team2 = State.teams.find(t => t.id === t2Id);
+
+            const mId = 'M' + Date.now();
+            await safeFirebaseCall(set(ref(db, `matches/${mId}`), { 
+                id: mId, team1: team1, team2: team2, stage: stage, status: 'Scheduled', time: State.settings.date 
+            }));
+
+            showToast("ম্যানুয়াল ম্যাচ সফলভাবে তৈরি হয়েছে!");
+            document.getElementById('manual-match-t1').value = '';
+            document.getElementById('manual-match-t2').value = '';
+        };
+
+        // TABS & APP NAVIGATION
+        window.switchTab = function(mode, tabId) {
+            document.querySelectorAll(`.${mode === 'public' ? 'pub' : 'adm'}-tab-btn`).forEach(b => { 
+                b.classList.remove(mode==='public'?'text-emerald-700':'text-emerald-400', mode==='public'?'border-emerald-700':'border-emerald-400'); 
+                b.classList.add(mode==='public'?'text-gray-500':'text-gray-400', 'border-transparent'); 
+            });
+            const btn = document.getElementById(`${mode === 'public' ? 'pub' : 'adm'}-tab-btn-${tabId}`); 
+            if(!btn) return;
+            
+            btn.classList.remove(mode==='public'?'text-gray-500':'text-gray-400', 'border-transparent'); 
+            btn.classList.add(mode==='public'?'text-emerald-700':'text-emerald-400', mode==='public'?'border-emerald-700':'border-emerald-400');
+            
+            document.querySelectorAll(`.${mode === 'public' ? 'pub' : 'adm'}-tab-content`).forEach(c => { 
+                c.classList.add('hidden'); c.classList.remove('block'); 
+            });
+            document.getElementById('payment-redirect-view').classList.add('hidden');
+            
+            const contentPane = document.getElementById(`${mode === 'public' ? 'pub' : 'adm'}-tab-${tabId}`);
+            contentPane.classList.remove('hidden'); 
+            contentPane.classList.add('block');
+            
+            if (mode === 'admin' && tabId === 'score') {
+                if (State.liveMatch) {
+                    document.getElementById('score-setup-panel').classList.add('hidden');
+                    document.getElementById('active-scoring-panel').classList.remove('hidden');
+                } else {
+                    document.getElementById('score-setup-panel').classList.remove('hidden');
+                    document.getElementById('active-scoring-panel').classList.add('hidden');
+                }
+            }
+        };
+
+        window.showLoginModal = () => document.getElementById('loginModal').classList.remove('hidden');
+        window.hideLoginModal = () => document.getElementById('loginModal').classList.add('hidden');
+        
+        window.performLogin = () => { 
+            if(document.getElementById('login-user').value === 'admin' && document.getElementById('login-pass').value === 'admin') { 
+                State.isLoggedIn = true; 
+                hideLoginModal(); 
+                document.getElementById('loginBtn').classList.add('hidden'); 
+                document.getElementById('logoutBtn').classList.remove('hidden'); 
+                document.getElementById('adminToggleBtn').classList.remove('hidden'); 
+                toggleView('admin'); 
+                
+                document.body.classList.remove('theme-premium');
+                document.body.classList.add('theme-violet');
+                
+                showToast(State.liveMatch ? "Logged in! Resuming Live Match..." : "Logged in as Admin"); 
+            } else {
+                showToast("Invalid Credentials", true); 
+            }
+        };
+
+        window.logout = () => { 
+            State.isLoggedIn = false; 
+            document.getElementById('loginBtn').classList.remove('hidden'); 
+            document.getElementById('logoutBtn').classList.add('hidden'); 
+            document.getElementById('adminToggleBtn').classList.add('hidden'); 
+            toggleView('public'); 
+            
+            document.body.classList.remove('theme-violet');
+            document.body.classList.add('theme-premium');
+            
+            showToast("Logged out"); 
+        };
+        
+        window.toggleView = (force) => {
+            State.viewMode = force || (State.viewMode === 'public' ? 'admin' : 'public');
+            if (State.viewMode === 'admin') { 
+                document.getElementById('public-view').classList.add('hidden'); 
+                document.getElementById('publicNav').classList.add('hidden'); 
+                document.getElementById('admin-view').classList.remove('hidden'); 
+                document.getElementById('adminNav').classList.remove('hidden'); 
+                document.getElementById('adminNav').classList.add('flex'); 
+                
+                if (State.liveMatch) switchTab('admin', 'score');
+                else switchTab('admin', 'settings'); 
+            } 
+            else { 
+                document.getElementById('admin-view').classList.add('hidden'); 
+                document.getElementById('adminNav').classList.add('hidden'); 
+                document.getElementById('adminNav').classList.remove('flex'); 
+                document.getElementById('public-view').classList.remove('hidden'); 
+                document.getElementById('publicNav').classList.remove('hidden'); 
+                
+                if (State.liveMatch) switchTab('public', 'live');
+                else switchTab('public', 'entry'); 
+            }
+        };
+
+        initFirebase();
+        
+        window.downloadSummaryPDF = function() {
+            const element = document.querySelector('#summary-view .a4-container');
+            const btn = document.getElementById('summary-download-btn');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Downloading...';
+            btn.disabled = true;
+
+            const opt = {
+                margin:       0,
+                filename:     `Match_Summary_${Date.now()}.pdf`,
+                image:        { type: 'jpeg', quality: 1 },
+                html2canvas:  { scale: 3, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showToast("Summary PDF Downloaded Successfully!");
+            });
+        };
+        
+        window.downloadReceiptPDF = function() {
+            const element = document.querySelector('#pdf-render-target');
+            const btn = document.getElementById('receipt-download-btn');
+            const originalText = btn.innerHTML;
+            
+            btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Downloading...';
+            btn.disabled = true;
+
+            const opt = {
+                margin:       0,
+                filename:     `Receipt_Rules_${document.getElementById('r-regNo').innerText}.pdf`,
+                image:        { type: 'jpeg', quality: 1 }, 
+                html2canvas:  { scale: 3, useCORS: true }, 
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                showToast("PDF Downloaded Successfully!");
+            });
+        };
+        
+        window.renderPublicParticipants = function() {
+            const list = document.getElementById('public-participants-list');
+            if (!list) return;
+            list.innerHTML = '';
+            
+            const validTeams = State.teams.filter(t => t.status === 'Approved' || t.status.includes('Paid'));
+            
+            if(validTeams.length === 0) {
+                list.innerHTML = `<tr><td colspan="3" class="p-4 text-center text-gray-500 font-bold">No teams registered yet.</td></tr>`;
+                return;
+            }
+
+            validTeams.forEach(t => {
+                list.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50 transition">
+                        <td class="p-3 font-bold text-gray-700">${t.regNo || t.id}</td>
+                        <td class="p-3 font-bold text-emerald-700 uppercase">${t.name}</td>
+                        <td class="p-3 text-center space-x-2 whitespace-nowrap">
+                            <button onclick="downloadDirectReceipt('${t.id}')" class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-3 py-1.5 rounded text-xs font-bold hover:bg-indigo-100 transition inline-flex items-center gap-1 shadow-sm">
+                                <i class="ph ph-receipt"></i> রিসিপ্ট
+                            </button>
+                            <button onclick="downloadDirectRules('${t.id}')" class="bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1.5 rounded text-xs font-bold hover:bg-amber-100 transition inline-flex items-center gap-1 shadow-sm">
+                                <i class="ph ph-scroll"></i> নিয়মাবলী
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        };
+
+        window.downloadDirectReceipt = function(teamId) {
+            const team = State.teams.find(t => t.id === teamId);
+            if(!team) return;
+            showToast("Generating Receipt PDF...");
+            
+            let playersHtml = '';
+            team.players.forEach((p, i) => playersHtml += `<div><span class="text-gray-500 text-xs">${i+1}.</span> ${getDisplayName(p, team)}</div>`);
+            
+            const container = document.createElement('div');
+            container.style.position = 'absolute'; container.style.left = '-9999px';
+            container.innerHTML = `
+            <div class="a4-container font-serif bg-white text-black" style="width:210mm; min-height:297mm; padding:20mm; position:relative;">
+                <div class="text-center mb-6">
+                    <h1 class="text-3xl font-bold tracking-wider mb-2 uppercase">Modern Sporting Club</h1>
+                    <p class="text-sm font-medium">Itinda Road, Dhaltitha, Basirhat, North 24 Parganas</p>
+                    <hr class="border-t-2 border-black mt-4 mb-1"><hr class="border-t border-black">
+                </div>
+                <div class="flex justify-between items-center mb-8">
+                    <div class="font-bold text-lg border-2 border-black px-3 py-1">Registration No: ${team.regNo || team.id}</div>
+                    <div class="font-semibold text-md">Date: ${new Date(team.timestamp || Date.now()).toLocaleDateString()}</div>
+                </div>
+                <div class="space-y-4 mb-8 text-[15px]">
+                    <div class="flex"><span class="w-48 font-bold">Team Name:</span><span class="flex-1 border-b border-dashed border-gray-400 uppercase font-bold">${team.name}</span></div>
+                    <div class="flex"><span class="w-48 font-bold">Leader Name:</span><span class="flex-1 border-b border-dashed border-gray-400">${team.head}</span></div>
+                    <div class="flex"><span class="w-48 font-bold">Phone No.:</span><span class="flex-1 border-b border-dashed border-gray-400 font-mono">${team.phone}</span></div>
+                    <div class="flex"><span class="w-48 font-bold">Address:</span><span class="flex-1 border-b border-dashed border-gray-400">${team.address}</span></div>
+                </div>
+                <div class="mb-8">
+                    <h3 class="font-bold mb-3 border-b border-black pb-1 inline-block">Registered Players</h3>
+                    <div class="grid grid-cols-2 gap-x-8 gap-y-2 text-[15px]">${playersHtml}</div>
+                </div>
+                <div class="mt-auto absolute bottom-12 left-0 w-full px-[20mm]">
+                    <div class="text-xs font-bold text-gray-500 uppercase tracking-widest border-t border-gray-300 pt-4 text-center">Authorized System Generated Document</div>
+                </div>
+            </div>`;
+            document.body.appendChild(container);
+
+            html2pdf().set({ margin: 0, filename: `Receipt_${team.regNo || team.id}.pdf`, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 3 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(container.firstElementChild).save().then(() => {
+                document.body.removeChild(container); showToast("Receipt Downloaded!");
+            });
+        };
+
+        window.downloadDirectRules = function(teamId) {
+            const team = State.teams.find(t => t.id === teamId);
+            if(!team) return;
+            showToast("Generating Rules PDF...");
+
+            // Exact rules from admin settings
+            let combinedRules = ["টুর্ণামেন্ট সব নিয়ম মেনে চলবো", ...(State.settings.rules || ["প্লেড প্লেয়ার খেলা নেই।"])];
+            const rulesHtml = combinedRules.map((r, i) => `<li class="mb-2"><span class="mr-2">${i+1}.</span>${r}</li>`).join('');
+
+            const container = document.createElement('div');
+            container.style.position = 'absolute'; container.style.left = '-9999px';
+            container.innerHTML = `
+            <div class="a4-container font-serif bg-white text-black" style="width:210mm; min-height:297mm; padding:20mm; position:relative;">
+                <div class="text-center mb-6">
+                    <h1 class="text-3xl font-bold tracking-wider mb-2 uppercase">Modern Sporting Club</h1>
+                    <p class="text-sm font-medium">Itinda Road, Dhaltitha, Basirhat, North 24 Parganas</p>
+                    <hr class="border-t-2 border-black mt-4 mb-1"><hr class="border-t border-black">
+                </div>
+                
+                <div class="flex justify-between items-center mb-6 font-bold text-[15px]">
+                    <div>Date: ${new Date(team.timestamp || Date.now()).toLocaleDateString()}</div>
+                    <div>Team Reg. No: ${team.regNo || team.id}</div>
+                </div>
+
+                <div class="mb-6 font-bold text-[15px] leading-relaxed text-left">
+                    <p>For,</p>
+                    <p class="uppercase text-lg border-b border-dashed border-gray-400 inline-block pr-4 pb-1 mb-1">${team.name}</p>
+                    <p class="font-normal text-gray-700 leading-tight">${team.address}</p>
+                </div>
+
+                <div class="text-center mb-4 bg-gray-100 py-2 border-y border-black">
+                    <h2 class="text-lg font-bold tracking-wider uppercase">টুর্নামেন্টের নিয়মাবলি ও ঘোষণাপত্র</h2>
+                </div>
+
+                <div class="mb-12 text-left min-h-[120mm]">
+                    <ul class="list-none pl-0 text-[15px] space-y-3 text-gray-800 font-semibold">
+                        ${rulesHtml}
+                    </ul>
+                </div>
+
+                <div class="absolute bottom-12 left-0 w-full px-[20mm]">
+                    <div class="flex justify-between items-end border-t-2 border-gray-800 pt-6">
+                        <div class="text-sm font-bold text-gray-800 w-2/3 pr-4 leading-relaxed text-left">
+                            ঘোষণাপত্র: আমি উপরোক্ত সমস্ত নিয়মাবলি পড়িয়াছি ও বুঝিয়াছি। আমার দলের পক্ষ হইতে আমি এই নিয়মাবলি সম্পূর্ণভাবে মানিয়া চলিতে বাধ্য থাকিব।
+                        </div>
+                        <div class="text-center w-1/3">
+                            <div class="font-bold text-xl font-sans tracking-wide" id="r2-teamHead-sign">${team.head}</div>
+                            <div class="border-b-2 border-gray-800 w-full mb-1"></div>
+                            <span class="text-xs font-bold uppercase tracking-widest block">Team Leader Signature</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest border-t border-gray-300 text-center">
+                        Authorized System Generated Document
+                    </div>
+                </div>
+            </div>`;
+            document.body.appendChild(container);
+
+            html2pdf().set({ margin: 0, filename: `Rules_${team.regNo || team.id}.pdf`, image: { type: 'jpeg', quality: 1 }, html2canvas: { scale: 3 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }).from(container.firstElementChild).save().then(() => {
+                document.body.removeChild(container); showToast("Rules PDF Downloaded!");
+            });
+        };
+        
+        window.downloadRulesPDF = function(btnElement) {
+            const element = document.querySelector('#rules-pdf-content');
+            const originalText = btnElement.innerHTML;
+            
+            const rulesText = State.settings.rules || "কোনো নিয়মাবলি সেট করা হয়নি।";
+            document.getElementById('r-dynamic-rules').innerText = rulesText;
+            
+            btnElement.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Downloading...';
+            btnElement.disabled = true;
+
+            const opt = {
+                margin:       0,
+                filename:     `Tournament_Rules.pdf`,
+                image:        { type: 'jpeg', quality: 1 },
+                html2canvas:  { scale: 3, useCORS: true }, 
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            const rulesView = document.getElementById('rules-pdf-view');
+            rulesView.classList.remove('hidden');
+            rulesView.style.position = 'absolute';
+            rulesView.style.left = '-9999px';
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                rulesView.classList.add('hidden');
+                rulesView.style.position = '';
+                rulesView.style.left = '';
+                btnElement.innerHTML = originalText;
+                btnElement.disabled = false;
+                showToast("Rules PDF Downloaded Successfully!");
+            });
+        };
+
+        window.renderBowlerRules = function() {
+            const container = document.getElementById('bowler-rules-container');
+            if(!container) return;
+            container.innerHTML = '';
+            let calcText = [];
+            let totalOvers = 0;
+            let hasUnlimited = false;
+
+            const rules = State.settings.bowlerRules || [{bowlers: 3, overs: 2}, {bowlers: 2, overs: 1}];
+
+            rules.forEach((r, i) => {
+                const bCount = r.bowlers;
+                const oLimit = r.overs;
+                
+                if(oLimit === 'unlimited') {
+                    calcText.push(`${bCount} জন × নো লিমিট`);
+                    hasUnlimited = true;
+                } else {
+                    calcText.push(`${bCount}×${oLimit}`);
+                    totalOvers += (parseInt(bCount) * parseInt(oLimit));
+                }
+
+                container.innerHTML += `
+                <div class="flex gap-2 items-center bg-white p-2 rounded border shadow-sm">
+                    <select onchange="updateBowlerRule(${i}, 'bowlers', this.value)" class="input-field !py-1 !px-2 text-sm flex-1">
+                        ${[1,2,3,4,5,6,7,8,9,10,11].map(n => `<option value="${n}" ${bCount == n ? 'selected' : ''}>${n} জন বোলার</option>`).join('')}
+                    </select>
+                    <i class="ph ph-arrow-right text-gray-400"></i>
+                    <select onchange="updateBowlerRule(${i}, 'overs', this.value)" class="input-field !py-1 !px-2 text-sm flex-1">
+                        ${[1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}" ${oLimit == n ? 'selected' : ''}>${n} ওভার</option>`).join('')}
+                        <option value="unlimited" ${oLimit === 'unlimited' ? 'selected' : ''}>নো লিমিট</option>
+                    </select>
+                    <button type="button" onclick="removeBowlerRuleRow(${i})" class="bg-red-100 text-red-600 p-1.5 rounded hover:bg-red-200"><i class="ph ph-trash"></i></button>
+                </div>`;
+            });
+
+            document.getElementById('bowler-rules-calc').innerText = "হিসাব: " + (calcText.join(' + ') || '0');
+            document.getElementById('bowler-rules-total').innerText = hasUnlimited ? 'আনলিমিটেড' : totalOvers;
+            
+            if(!hasUnlimited && document.getElementById('set-totalOvers')) {
+                document.getElementById('set-totalOvers').value = totalOvers;
+                State.settings.totalOvers = totalOvers;
+            }
+            State.settings.bowlerRules = rules;
+        };
+
+        window.addBowlerRuleRow = function() {
+            State.settings.bowlerRules = State.settings.bowlerRules || [];
+            State.settings.bowlerRules.push({bowlers: 1, overs: 1});
+            renderBowlerRules();
+        };
+
+        window.removeBowlerRuleRow = function(index) {
+            State.settings.bowlerRules.splice(index, 1);
+            renderBowlerRules();
+        };
+
+        window.updateBowlerRule = function(index, field, value) {
+            State.settings.bowlerRules[index][field] = value;
+            renderBowlerRules();
+        };
+        
+        function showLocationRequiredOverlay() {
+            if (document.getElementById('location-lock-overlay')) return;
+            const overlay = document.createElement('div');
+            overlay.id = 'location-lock-overlay';
+            overlay.className = 'fixed inset-0 bg-slate-900 bg-opacity-95 z-[9999] flex flex-col items-center justify-center p-4 text-center text-white';
+            overlay.innerHTML = `
+                <div class="bg-white text-slate-800 p-6 rounded-2xl max-w-sm w-full shadow-2xl space-y-4">
+                    <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-3xl">
+                        <i class="ph ph-map-pin-line animate-bounce"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-900">লোকেশন পারমিশন আবশ্যক!</h2>
+                    <p class="text-sm text-slate-600">ম্যাচ পরিচালনা বা লাইভ পোর্টাল ব্যবহারের জন্য আপনার সঠিক জিপিএস লোকেশন প্রয়োজন। দয়া করে পারমিশন 'Allow' করুন।</p>
+                    <button onclick="forceCollectLocation()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-4 rounded-xl transition duration-200">
+                        আবার চেষ্টা করুন
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        function removeLocationOverlay() {
+            const overlay = document.getElementById('location-lock-overlay');
+            if (overlay) overlay.remove();
+        }
+    </script>
+</body>
+</html>
