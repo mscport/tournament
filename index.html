@@ -52,16 +52,34 @@
         #sync-status { transition: all 0.3s; }
         .sync-active { color: #10b981; }
         .sync-offline { color: #ef4444; }
-        
-        /* Fullscreen overrides */
-        .fs-container:-webkit-full-screen { width: 100vw; height: 100vh; overflow-y: auto; background-color: #ffffff; }
-        .fs-container:fullscreen { width: 100vw; height: 100vh; overflow-y: auto; background-color: #ffffff; }
-        body.theme-violet .fs-container:-webkit-full-screen { background-color: #170f2e; }
-        body.theme-violet .fs-container:fullscreen { background-color: #170f2e; }
-        
-        /* =========================================
-   DYNAMIC THEMES (PREMIUM & DEEP VIOLET)
-   ========================================= */
+
+        /* Fullscreen Mode Overrides */
+        body.fullscreen-mode header,
+        body.fullscreen-mode footer,
+        body.fullscreen-mode #score-setup-panel,
+        body.fullscreen-mode .print-action-bar {
+            display: none !important;
+        }
+        body.fullscreen-mode main {
+            margin: 0 !important;
+            padding: 0 !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            height: 100vh !important;
+        }
+        body.fullscreen-mode #active-scoring-panel,
+        body.fullscreen-mode #public-live-scoreboard {
+            border-radius: 0 !important;
+            border: none !important;
+            height: 100vh !important;
+            margin: 0 !important;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        body.fullscreen-mode #active-scoring-panel > .bowling-theme {
+            flex: 1; 
+        }
 
         /* 1. STANDARD PREMIUM THEME (Public/Logged Out) */
         body.theme-premium {
@@ -73,118 +91,54 @@
             border: 1px solid rgba(255, 255, 255, 0.8) !important;
         }
 
-        /* 2. DEEP VIOLET THEME (Admin/Logged In) */
-        body.theme-violet {
-            background: #170f2e !important; /* Deep Violet Base Background */
-            color: #e9d5ff !important;
-        }
-        body.theme-violet header {
-            background-color: #2e1065 !important;
-            border-bottom: 1px solid #4c1d95 !important;
-        }
-        body.theme-violet header h1, 
-        body.theme-violet header .text-gray-900 {
-            color: #ffffff !important;
-        }
-        body.theme-violet header .text-gray-500 {
-            color: #c4b5fd !important;
+        /* 2. DEEP VIOLET THEME (Admin/Logged In) - White BG & Violet Text (Score Tab Excluded) */
+        body.theme-violet { background-color: #ffffff !important; }
+        body.theme-violet header { background-color: #ffffff !important; border-bottom: 2px solid #4B0082 !important; }
+        body.theme-violet header h1 { color: #4B0082 !important; }
+        body.theme-violet header #adminNav { background-color: #4B0082 !important; }
+        body.theme-violet header #adminNav button { color: #e9d5ff !important; }
+        body.theme-violet header #adminNav button.border-emerald-400 { color: #ffffff !important; border-color: #ffffff !important; }
+
+        /* Wrapper Cards for Settings, Teams, Schedule & Modals */
+        body.theme-violet #adm-tab-settings > div,
+        body.theme-violet #adm-tab-teams > div,
+        body.theme-violet #adm-tab-schedule > div,
+        body.theme-violet #adminTeamDetailsModal .bg-white,
+        body.theme-violet #editTeamModal .bg-white,
+        body.theme-violet #editMatchModal .bg-white {
+            background-color: #ffffff !important;
+            border: 2px solid #4B0082 !important;
+            box-shadow: 0 10px 25px -5px rgba(75, 0, 130, 0.15) !important;
         }
 
-        /* Cards & Containers in Violet Theme */
-        body.theme-violet .glass-card,
-        body.theme-violet .bg-white {
-            background-color: #281453 !important;
-            border: 1px solid #4c1d95 !important;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
-            color: #ede9fe !important;
+        /* Typography Overrides */
+        body.theme-violet #adm-tab-settings h2, body.theme-violet #adm-tab-settings h3, body.theme-violet #adm-tab-settings label,
+        body.theme-violet #adm-tab-teams h2, body.theme-violet #adm-tab-teams th, body.theme-violet #adm-tab-teams td, body.theme-violet #adm-tab-teams .text-gray-800,
+        body.theme-violet #adm-tab-schedule h2, body.theme-violet #adm-tab-schedule h3, body.theme-violet #adm-tab-schedule label,
+        body.theme-violet .bg-white h2 {
+            color: #4B0082 !important;
         }
 
-        /* Text Colors */
-        body.theme-violet .text-gray-800, 
-        body.theme-violet .text-gray-900 {
-            color: #f5f3ff !important;
+        /* Inputs */
+        body.theme-violet .input-field, body.theme-violet textarea {
+            background-color: #fdfcff !important;
+            border-color: #4B0082 !important;
+            color: #4B0082 !important;
         }
-        body.theme-violet .text-gray-700,
-        body.theme-violet .text-gray-600,
-        body.theme-violet .text-gray-500,
-        body.theme-violet .text-gray-400 {
-            color: #c4b5fd !important;
-        }
+        /* Force Batting Team Name to be White in Score Entry */
+body.theme-violet #sc-batting-team {
+    color: #ffffff !important;
+}
 
-        /* Overriding Emerald/Green to Violet */
-        body.theme-violet .text-emerald-700, 
-        body.theme-violet .text-emerald-600,
-        body.theme-violet .text-emerald-800 {
-            color: #a78bfa !important; 
-        }
-        body.theme-violet .bg-emerald-700, 
-        body.theme-violet .bg-emerald-600,
-        body.theme-violet .bg-gray-900 {
-            background-color: #6d28d9 !important;
-            color: #ffffff !important;
-            border-color: #5b21b6 !important;
-        }
-        body.theme-violet .bg-emerald-100, 
-        body.theme-violet .bg-emerald-50 {
-            background-color: #4c1d95 !important;
-            color: #ddd6fe !important;
-            border-color: #5b21b6 !important;
-        }
-
-        /* Sub-sections & Inputs */
-        body.theme-violet .bg-gray-50, 
-        body.theme-violet .bg-gray-100 {
-            background-color: #3b1c73 !important;
-            border-color: #4c1d95 !important;
-        }
-        body.theme-violet .bg-indigo-50, 
-        body.theme-violet .bg-indigo-100 {
-            background-color: #4c1d95 !important;
-            border-color: #5b21b6 !important;
-            color: #ede9fe !important;
-        }
-        body.theme-violet .text-indigo-900,
-        body.theme-violet .text-indigo-800,
-        body.theme-violet .text-indigo-700 {
-            color: #d8b4fe !important;
-        }
-        body.theme-violet .input-field {
-            background-color: #1f0d3d !important;
-            border-color: #5b21b6 !important;
-            color: #ffffff !important;
-        }
-        body.theme-violet .input-field:focus {
-            border-color: #8b5cf6 !important;
-            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2) !important;
-        }
-
-        /* Table & Borders */
-        body.theme-violet border-b, 
-        body.theme-violet border-t, 
-        body.theme-violet .border-gray-200, 
-        body.theme-violet .border-gray-100 {
-            border-color: #4c1d95 !important;
-        }
-        body.theme-violet th {
-            background-color: #3b1c73 !important;
-            color: #d8b4fe !important;
-            border-color: #4c1d95 !important;
-        }
-        body.theme-violet td {
-            border-color: #4c1d95 !important;
-        }
-        body.theme-violet tr:hover {
-            background-color: #4c1d95 !important;
-        }
     </style>
 </head>
 <body class="antialiased relative theme-premium">
 
-    <!-- Custom Toast Notification -->
-    <div id="toast" class="fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-xl transform transition-all duration-300 translate-y-20 opacity-0 z-[100] font-bold text-sm"></div>
+    <!-- Custom Toast Notification (High Z-index for Fullscreen support) -->
+    <div id="toast" class="fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-xl transform transition-all duration-300 translate-y-20 opacity-0 z-[99999] font-bold text-sm"></div>
 
     <!-- Custom Confirm Modal -->
-    <div id="confirmModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+    <div id="confirmModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
         <div class="bg-white rounded-xl p-6 w-full max-w-sm shadow-2xl text-center">
             <div id="confirm-icon" class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl"><i class="ph ph-warning-circle"></i></div>
             <h3 class="text-xl font-bold text-gray-900 mb-2">Message</h3>
@@ -205,10 +159,13 @@
                     <div>
                         <h1 class="text-xl font-bold text-gray-900 tracking-tight leading-none">Modern Sporting Club</h1>
                         <span class="text-[10px] font-bold text-gray-500 tracking-widest flex items-center flex-wrap gap-1 mt-1">
-                            <span class="uppercase">ESTD 1985 • ITINDA ROAD, DHALTITHA, BADIRHAT, NORTH 24 PGS</span>
-                            <span class="flex items-center ml-1">
+                            <span class="uppercase">ESTD 1985 • ITINDA ROAD, DHALTITHA</span>
+                            <span class="flex items-center ml-1 relative">
                                 <i id="sync-status" class="ph-fill ph-cloud-check sync-offline text-lg" title="Cloud Sync Status"></i>
-                                <span id="sync-callout" class="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded ml-2 animate-pulse border border-red-200 tracking-normal transition-opacity duration-300">সবুজ না হওয়া পর্যন্ত অপেক্ষা করুন...</span>
+                                <!-- Sync Callout Overlay -->
+                                <span id="sync-callout" class="absolute left-6 top-1/2 -translate-y-1/2 whitespace-nowrap bg-red-100 text-red-700 px-2 py-0.5 rounded shadow-sm text-[10px] font-bold tracking-normal animate-pulse border border-red-200 flex items-center gap-1 z-50">
+                                    <i class="ph ph-spinner animate-spin"></i> সবুজ না হওয়া পর্যন্ত অপেক্ষা করুন...
+                                </span>
                             </span>
                         </span>
                     </div>
@@ -223,10 +180,7 @@
             <nav id="publicNav" class="flex overflow-x-auto hide-scrollbar gap-1 mt-1 border-t border-gray-200">
                 <button onclick="switchTab('public', 'entry')" id="pub-tab-btn-entry" class="pub-tab-btn active flex-1 py-3 px-4 text-center font-semibold text-emerald-700 border-b-2 border-emerald-700">ENTRY <span class="text-[10px] block font-normal opacity-80">এন্ট্রি</span></button>
                 <button onclick="switchTab('public', 'scheduled')" id="pub-tab-btn-scheduled" class="pub-tab-btn flex-1 py-3 px-4 text-center font-medium text-gray-500 border-b-2 border-transparent hover:text-emerald-700">SCHEDULED <span class="text-[10px] block font-normal opacity-80">সূচি</span></button>
-                
-                <button onclick="switchTab('public', 'participants')" id="pub-tab-btn-participants" class="pub-tab-btn flex-1 py-3 px-4 text-center font-medium text-gray-500 border-b-2 border-transparent hover:text-emerald-700">
-                    PARTICIPANTS <span class="text-[10px] block font-normal opacity-80">দলসমূহ</span>
-                </button>
+                <button onclick="switchTab('public', 'participants')" id="pub-tab-btn-participants" class="pub-tab-btn flex-1 py-3 px-4 text-center font-medium text-gray-500 border-b-2 border-transparent hover:text-emerald-700">PARTICIPANTS <span class="text-[10px] block font-normal opacity-80">দলসমূহ</span></button>
                 <button onclick="switchTab('public', 'live')" id="pub-tab-btn-live" class="pub-tab-btn flex-1 py-3 px-4 text-center font-medium text-gray-500 border-b-2 border-transparent hover:text-emerald-700 flex flex-col items-center">
                     <span class="flex items-center gap-1">LIVE SCORE <span class="relative flex h-2 w-2"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span></span></span>
                     <span class="text-[10px] block font-normal opacity-80">লাইভ স্কোর</span>
@@ -272,7 +226,7 @@
                     
                     <div class="bg-gray-50 p-5 rounded-xl border border-gray-200">
                         <div class="flex justify-between items-end border-b pb-2 mb-4">
-                            <div><h3 class="font-semibold text-gray-700">Players / খেলোয়াড়</h3></div>
+                            <div><h3 class="font-semibold text-gray-700">Players / খেলোয়াড়</h3><p class="text-[10px] text-gray-500 mt-1">প্লেয়ারের নাম হাইড করতে চোখের আইকনে ক্লিক করুন</p></div>
                             <button type="button" onclick="addPlayer('reg')" class="flex items-center gap-1 bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-lg text-sm font-semibold"><i class="ph ph-plus-circle"></i> Add</button>
                         </div>
                         <div id="playersList" class="space-y-3"></div>
@@ -392,11 +346,6 @@
                     <p class="text-xs text-gray-500 mt-2 font-semibold">* This rules list will dynamically appear in the Registration Agreement Modal and generated PDFs.</p>
                 </div>
 
-                <div class="input-group mt-6 hidden">
-                    <label>Tournament Rules / নিয়মাবলি (প্রতিটি নিয়ম নতুন লাইনে লিখুন)</label>
-                    <textarea id="set-rules" class="input-field" rows="5" placeholder="১. ম্যাচ শুরু হওয়ার অন্তত ৩০ মিনিট আগে মাঠে রিপোর্ট করতে হবে..."></textarea>
-                </div>
-
                 <button onclick="saveSettings(event)" class="mt-8 bg-gray-900 text-white px-8 py-3 rounded-lg font-bold hover:bg-gray-800 w-full md:w-auto transition shadow-lg text-center flex items-center justify-center gap-2">Save All Settings to Cloud <i class="ph ph-cloud-arrow-up text-xl"></i></button>
             </div>
         </section>
@@ -467,12 +416,12 @@
             </div>
 
             <!-- SCORING CONSOLE (With Fullscreen support) -->
-            <div id="active-scoring-panel" class="hidden rounded-xl overflow-hidden shadow-2xl border border-gray-800 fs-container flex flex-col relative bg-white">
+            <div id="active-scoring-panel" class="hidden rounded-xl overflow-hidden shadow-2xl border border-gray-800 flex flex-col relative bg-white">
                 
                 <!-- FULLSCREEN TOGGLE BAR -->
-                <div class="bg-gray-900 text-gray-300 flex justify-between items-center px-4 py-2 text-xs font-bold w-full">
+                <div class="bg-gray-900 text-gray-300 flex justify-between items-center px-4 py-2 text-xs font-bold w-full border-b border-gray-800">
                     <span class="tracking-widest flex items-center gap-1"><i class="ph-fill ph-broadcast text-red-500 animate-pulse"></i> LIVE SCORING CONSOLE</span>
-                    <button onclick="toggleScoringFullscreen()" class="hover:text-white flex items-center gap-1 bg-gray-800 px-3 py-1 rounded transition">
+                    <button onclick="toggleFullscreen()" class="hover:text-white flex items-center gap-1 bg-gray-800 px-3 py-1 rounded transition border border-gray-700">
                         <i class="ph ph-corners-out"></i> Toggle Fullscreen
                     </button>
                 </div>
@@ -482,7 +431,8 @@
                         <div>
                             <span class="bg-purple-800 text-purple-200 text-xs px-2 py-1 rounded font-bold uppercase">Batting</span>
                             <span id="sc-innings-badge" class="ml-2 bg-yellow-500 text-yellow-900 text-[10px] px-2 py-1 rounded font-black uppercase">1st Innings</span>
-                            <h2 id="sc-batting-team" class="text-xl md:text-2xl font-bold mt-1">Team A</h2>
+                            <h2 id="sc-batting-team" class="text-xl md:text-2xl font-bold mt-1 text-white">Team A</h2>
+
                         </div>
                         <div class="text-right flex flex-col items-end">
                             <div class="text-3xl md:text-4xl font-black tracking-tighter" id="sc-total-score">0 - 0</div>
@@ -578,7 +528,7 @@
     </main>
 
     <!-- Terms and Conditions Public Modal -->
-    <div id="rulesModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
+    <div id="rulesModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl relative flex flex-col max-h-[90vh]">
             <div class="p-6 border-b flex justify-between items-center bg-amber-50 rounded-t-2xl">
                 <h2 class="text-2xl font-bold text-amber-900 flex items-center gap-2"><i class="ph ph-gavel"></i> টুর্নামেন্টের নিয়মাবলি</h2>
@@ -597,7 +547,7 @@
     </div>
 
     <!-- ADMIN: VIEW TEAM DETAILS MODAL -->
-    <div id="adminTeamDetailsModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
+    <div id="adminTeamDetailsModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
         <div class="bg-white rounded-xl w-full max-w-lg shadow-2xl relative max-h-[90vh] flex flex-col">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50 rounded-t-xl">
                 <h2 class="text-xl font-bold flex items-center gap-2 text-gray-800"><i class="ph-fill ph-users text-emerald-600"></i> Team Details</h2>
@@ -625,7 +575,7 @@
     </div>
 
     <!-- PUBLIC: TEAM DETAILS MODAL -->
-    <div id="publicTeamModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
+    <div id="publicTeamModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
         <div class="bg-white rounded-xl w-full max-w-sm shadow-2xl relative">
             <div class="p-5 border-b flex justify-between items-center bg-emerald-50 rounded-t-xl">
                 <h2 class="text-xl font-bold text-emerald-800" id="pub-modal-teamName">Team Name</h2>
@@ -646,7 +596,7 @@
     </div>
 
     <!-- ADMIN: Edit Team Modal -->
-    <div id="editTeamModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+    <div id="editTeamModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
         <div class="bg-white rounded-xl w-full max-w-2xl shadow-2xl relative max-h-[90vh] flex flex-col text-gray-800">
             <div class="p-5 border-b flex justify-between items-center text-gray-900">
                 <h2 class="text-xl font-bold">Edit Team Details</h2>
@@ -676,8 +626,8 @@
         </div>
     </div>
 
-    <!-- Wicket Modal -->
-    <div id="wicketModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[90] flex items-center justify-center p-4">
+    <!-- Wicket Modal (High Z-Index for Fullscreen Mode) -->
+    <div id="wicketModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
         <div class="bg-white rounded-xl w-full max-w-sm shadow-2xl relative text-gray-800">
             <div class="p-4 border-b bg-red-50 rounded-t-xl text-red-800 font-bold flex justify-between items-center">
                 <span><i class="ph ph-skull mr-2"></i> Register Wicket</span>
@@ -717,7 +667,7 @@
     </div>
     
     <!-- Edit Match Modal -->
-    <div id="editMatchModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[80] flex items-center justify-center p-4">
+    <div id="editMatchModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
         <div class="bg-white rounded-xl w-full max-w-md shadow-2xl relative flex flex-col text-gray-800">
             <div class="p-5 border-b flex justify-between items-center bg-indigo-50 rounded-t-xl">
                 <h2 class="text-xl font-bold text-indigo-900"><i class="ph ph-calendar-edit mr-2"></i>ম্যাচ এডিট করুন</h2>
@@ -743,15 +693,15 @@
         </div>
     </div>
     
-    <!-- Login Modal -->
-    <div id="loginModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl relative text-gray-800">
-            <button onclick="hideLoginModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-800"><i class="ph ph-x-bold text-xl"></i></button>
-            <h2 class="text-2xl font-bold mb-6 text-center text-gray-900">Back Office Login</h2>
+    <!-- Login Modal (Styling Fix Applied: White BG, Deep Violet Text) -->
+    <div id="loginModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-[99999] flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-8 w-full max-w-sm shadow-2xl relative border-2 border-[#4B0082]">
+            <button onclick="hideLoginModal()" class="absolute top-4 right-4 text-[#4B0082] hover:text-red-600 transition"><i class="ph ph-x-bold text-xl"></i></button>
+            <h2 class="text-2xl font-bold mb-6 text-center text-[#4B0082]">Back Office Login</h2>
             <div class="space-y-4">
-                <div class="input-group"><label>Username</label><input type="text" id="login-user" class="input-field text-gray-800" placeholder="ইউজার নেম"></div>
-                <div class="input-group"><label>Password</label><input type="password" id="login-pass" class="input-field text-gray-800" placeholder="পাসওয়ার্ড"></div>
-                <button onclick="performLogin()" class="w-full bg-gray-900 text-white font-bold py-3 rounded-lg hover:bg-gray-800 transition">Login</button>
+                <div class="input-group"><label class="text-[#4B0082]">Username</label><input type="text" id="login-user" class="input-field border-[#4B0082] text-[#4B0082] bg-white focus:ring-2 focus:ring-[#4B0082]" placeholder="ইউজার নেম"></div>
+                <div class="input-group"><label class="text-[#4B0082]">Password</label><input type="password" id="login-pass" class="input-field border-[#4B0082] text-[#4B0082] bg-white focus:ring-2 focus:ring-[#4B0082]" placeholder="পাসওয়ার্ড"></div>
+                <button onclick="performLogin()" class="w-full bg-[#4B0082] text-white font-bold py-3 rounded-lg hover:bg-purple-900 transition shadow-lg">Login</button>
             </div>
         </div>
     </div>
@@ -811,9 +761,9 @@
                 </div>
                 <div class="mb-8 mt-8 text-black">
                     <h3 class="font-bold text-lg mb-3 underline decoration-gray-400 text-black">Rules & Regulations (নিয়মাবলি):</h3>
-                    <!-- Dynamic Rules Render Here -->
+                    <!-- Dynamic Rules Render Here (Only Firebase Data) -->
                     <ul id="r2-rules-list" class="list-none pl-0 space-y-2 text-[15px] font-medium text-black">
-                        <!-- Rules injected from JS -->
+                        <!-- Rules injected dynamically from JS -->
                     </ul>
                 </div>
                 <div class="mt-12 text-black">
@@ -883,7 +833,7 @@
     </footer>
     
     <script>
-    // Google Maps Autocomplete Initialize (Updated for Single Input)
+    // Google Maps Autocomplete Initialize
     window.initAddressAutocomplete = function() {
         const input = document.getElementById('reg-address');
         if (!input) return;
@@ -939,66 +889,6 @@
             }
         );
     };
-    
-    window.getLocation = function() {
-        const btn = event.currentTarget;
-        const originalText = btn.innerHTML;
-        
-        if (!navigator.geolocation) {
-            showToast("আপনার ব্রাউজার লোকেশন সাপোর্ট করে না।", true);
-            return;
-        }
-
-        btn.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Locating...';
-
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                
-                const geocoder = new google.maps.Geocoder();
-                const latlng = { lat: parseFloat(lat), lng: parseFloat(lng) };
-
-                geocoder.geocode({ location: latlng }, (results, status) => {
-                    btn.innerHTML = originalText;
-
-                    if (status === "OK" && results[0]) {
-                        document.getElementById('reg-village').value = '';
-                        document.getElementById('reg-road').value = '';
-                        document.getElementById('reg-pin').value = '';
-
-                        for (const component of results[0].address_components) {
-                            const componentType = component.types[0];
-
-                            switch (componentType) {
-                                case "route": 
-                                    document.getElementById('reg-road').value = component.long_name; 
-                                    break;
-                                case "sublocality_level_1":
-                                case "locality": 
-                                    document.getElementById('reg-village').value = component.long_name; 
-                                    break;
-                                case "postal_code": 
-                                    document.getElementById('reg-pin').value = component.long_name; 
-                                    break;
-                            }
-                        }
-                        showToast("ঠিকানা পাওয়া গেছে! দয়া করে যাচাই করে নিন।");
-                    } else {
-                        showToast("সঠিক ঠিকানা খুঁজে পাওয়া যায়নি। ম্যানুয়ালি লিখুন।", true);
-                    }
-                });
-            },
-            (error) => {
-                btn.innerHTML = originalText;
-                if (error.code === error.PERMISSION_DENIED) {
-                    showToast("আপনি লোকেশন পারমিশন দেননি!", true);
-                } else {
-                    showToast("লোকেশন পেতে সমস্যা হচ্ছে।", true);
-                }
-            }
-        );
-    };
     </script>
     
     <!-- FIREBASE RTDB CLOUD SYNC & APP LOGIC -->
@@ -1013,23 +903,23 @@
                 entryFee: 1000, upiId: 'modernsportingclub@idbi', playersLimit: 9, 
                 maxOversPerBowler: 2, totalOvers: 10, teamLimit: 16, date: '2026-12-25T09:00', 
                 ageLimit: 'Open for all',
-                rules: ["প্লেড প্লেয়ার খেলা নেই।"]
+                rules: [] 
             },
             teams: [], matches: [], liveMatch: null, 
-            formPlayers: Array(7).fill(null).map(()=>({name:'', isHidden:false})), // Updated Object Structure
+            formPlayers: Array(7).fill(null).map(()=>({name:'', isHidden:false})), 
             pendingRegistration: null, editTeamId: null, currentViewingTeam: null, editMatchId: null
         };
 
         let db, auth;
 
-        // Custom Utilities
         window.showToast = function(msg, isError=false) {
             const t = document.getElementById('toast');
             t.innerText = msg;
-            t.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-xl transform transition-all duration-300 z-[100] font-bold ${isError ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'}`;
+            t.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-xl transform transition-all duration-300 z-[99999] font-bold ${isError ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'}`;
             t.style.transform = 'translateY(0)'; t.style.opacity = '1';
             setTimeout(() => { t.style.transform = 'translateY(20px)'; t.style.opacity = '0'; }, 3000);
         };
+        
         window.showConfirm = function(msg, onConfirm, isSuccess = false) {
             document.getElementById('confirm-msg').innerText = msg;
             const iconDiv = document.getElementById('confirm-icon');
@@ -1045,54 +935,54 @@
             document.getElementById('confirmModal').classList.remove('hidden');
             window._confirmCallback = onConfirm;
         };
+        
         window.executeConfirm = function() {
             document.getElementById('confirmModal').classList.add('hidden');
             if(window._confirmCallback) window._confirmCallback();
         };
+        
         window.closeConfirm = () => document.getElementById('confirmModal').classList.add('hidden');
 
-        // Fullscreen Toggle for Score Entry
-        window.toggleScoringFullscreen = function() {
-            const elem = document.getElementById('active-scoring-panel');
+        // Fullscreen Toggle Method applied to entire document
+        window.toggleFullscreen = function() {
+            const doc = document.documentElement;
             if (!document.fullscreenElement) {
-                if (elem.requestFullscreen) {
-                    elem.requestFullscreen();
-                } else if (elem.webkitRequestFullscreen) { /* Safari */
-                    elem.webkitRequestFullscreen();
-                } else if (elem.msRequestFullscreen) { /* IE11 */
-                    elem.msRequestFullscreen();
-                }
+                if (doc.requestFullscreen) doc.requestFullscreen();
+                else if (doc.webkitRequestFullscreen) doc.webkitRequestFullscreen();
+                else if (doc.msRequestFullscreen) doc.msRequestFullscreen();
+                document.body.classList.add('fullscreen-mode');
             } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                } else if (document.webkitExitFullscreen) { /* Safari */
-                    document.webkitExitFullscreen();
-                } else if (document.msExitFullscreen) { /* IE11 */
-                    document.msExitFullscreen();
-                }
+                if (document.exitFullscreen) document.exitFullscreen();
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                else if (document.msExitFullscreen) document.msExitFullscreen();
+                document.body.classList.remove('fullscreen-mode');
             }
         };
 
-        // EXPOSURE LOGIC (For Hiding/Unhiding Players)
+        // Listen for Esc key or system exit
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                document.body.classList.remove('fullscreen-mode');
+            } else {
+                document.body.classList.add('fullscreen-mode');
+            }
+        });
+
+        // Player Visibility Logic
         window.isTeamExposed = function(teamId) {
             if(!teamId) return false;
-            // 1. Is in Live Match?
             if (State.liveMatch && (State.liveMatch.batTeam.id === teamId || State.liveMatch.bowlTeam.id === teamId)) return true;
-            // 2. Has played a Completed Match?
             const hasPlayed = State.matches.some(m => m.status === 'Completed' && (m.team1.id === teamId || m.team2.id === teamId));
             return hasPlayed;
         };
 
         window.getDisplayName = function(pName, team) {
-            // If the player is NOT in the hidden list, return actual name
             if (!team.hiddenPlayers || !team.hiddenPlayers.includes(pName)) return pName;
-            // If team is exposed (live or completed match), unhide name
             if (isTeamExposed(team.id || team.regNo)) return pName;
-            // Otherwise keep it hidden
             return 'XXXXXX';
         };
 
-        // Firebase Initialization
+        // Initialize Firebase
         async function initFirebase() {
             try {
                 const config = {
@@ -1112,8 +1002,9 @@
                     if (user) {
                         document.getElementById('sync-status').classList.remove('sync-offline');
                         document.getElementById('sync-status').classList.add('sync-active');
+                        // Hide the callout text once connected
                         const callout = document.getElementById('sync-callout');
-                        if(callout) callout.style.display = 'none'; // Hide Callout
+                        if(callout) callout.style.display = 'none'; 
                         setupCloudListeners();
                     }
                 });
@@ -1130,7 +1021,7 @@
                 if(snapshot.exists()) { 
                     const val = snapshot.val();
                     State.settings = { ...State.settings, ...val }; 
-                    State.settings.rules = val.rules || ["প্লেড প্লেয়ার খেলা নেই।"];
+                    State.settings.rules = val.rules || [];
                     updateSettingsUI(); 
                 }
             });
@@ -1189,7 +1080,7 @@
             });
         };
 
-        window.addAdminRule = function() {
+        window.addAdminRule = async function() {
             const inp = document.getElementById('new-rule-input');
             const val = inp.value.trim();
             if(val) {
@@ -1197,13 +1088,19 @@
                 State.settings.rules.push(val);
                 inp.value = '';
                 renderAdminRules();
+                // Auto Sync logic to fix the PDF rules issue permanently
+                await safeFirebaseCall(set(ref(db, 'system/settings/rules'), State.settings.rules));
+                showToast("Rule added & synced with Server");
             }
         };
 
-        window.removeAdminRule = function(index) {
+        window.removeAdminRule = async function(index) {
             if(State.settings.rules) {
                 State.settings.rules.splice(index, 1);
                 renderAdminRules();
+                // Auto Sync logic
+                await safeFirebaseCall(set(ref(db, 'system/settings/rules'), State.settings.rules));
+                showToast("Rule removed & synced with Server");
             }
         };
 
@@ -1249,7 +1146,6 @@
             showToast("Settings and Rules Saved successfully");
         };
 
-        // --- NEW: RULES MODAL PUBLIC LOGIC ---
         window.openRulesModal = function() {
             const cb = document.getElementById('reg-agree-checkbox');
             if (cb.checked) {
@@ -1263,8 +1159,7 @@
             const container = document.getElementById('modal-rules-container');
             container.innerHTML = '';
 
-            const dynamicRule = `টুর্ণামেন্ট সব নিয়ম মেনে চলবো`;
-            let combinedRules = [dynamicRule, ...(State.settings.rules || ["প্লেড প্লেয়ার খেলা নেই।"])];
+            let combinedRules = ["টুর্ণামেন্ট সব নিয়ম মেনে চলবো", ...(State.settings.rules && State.settings.rules.length > 0 ? State.settings.rules : ["কোনো নিয়মাবলি সেভ করা নেই।"])];
 
             combinedRules.forEach((rule, index) => {
                 container.innerHTML += `
@@ -1305,7 +1200,6 @@
 
         window.cancelRegistrationRules = function() {
             document.getElementById('rulesModal').classList.add('hidden');
-            
             document.getElementById('reg-agree-checkbox').checked = false;
             document.getElementById('custom-checkbox-ui').innerHTML = '';
             document.getElementById('custom-checkbox-ui').classList.remove('bg-emerald-600', 'border-emerald-600');
@@ -1314,11 +1208,9 @@
             document.getElementById('registrationForm').reset();
             State.formPlayers = Array(7).fill(null).map(()=>({name:'', isHidden:false}));
             renderPlayersForm('reg');
-            
             showToast("রেজিস্ট্রেশন বাতিল ও ফর্ম মুছে ফেলা হয়েছে!", true);
         };
 
-        // HIDE PLAYER TOGGLE LOGIC
         window.renderPlayersForm = function(mode = 'reg') {
             const list = document.getElementById(mode === 'reg' ? 'playersList' : 'editPlayersList'); list.innerHTML = '';
             State.formPlayers.forEach((p, i) => {
@@ -1367,13 +1259,11 @@
                 <a href="${upiLink}" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-xl shadow-lg flex justify-center items-center gap-2 transition mb-3 animate-pulse text-center" onclick="document.getElementById('upi-verify-box').classList.remove('hidden')"><i class="ph ph-device-mobile"></i> Open UPI App to Pay</a>
                 <div class="mt-4 border-t pt-4 relative">
                     <div id="qr-timer-display" class="text-sm text-red-600 font-bold mb-2 text-center bg-red-50 py-1 rounded">QR Expiring in: <span id="qr-countdown" class="font-mono text-lg">01:00</span></div>
-                    
                     <div id="qr-image-container" class="transition-opacity duration-300">
                         <p class="text-xs text-gray-500 mb-2 font-bold uppercase text-center">If App doesn't open, scan this QR code:</p>
                         <img src="${qrUrl}" class="mx-auto border p-2 rounded-lg bg-white shadow-sm" alt="UPI QR">
                         <button onclick="document.getElementById('upi-verify-box').classList.remove('hidden')" class="text-xs text-indigo-600 font-bold mt-2 underline w-full text-center">I have paid using QR</button>
                     </div>
-                    
                     <div id="qr-regenerate-container" class="hidden text-center py-6 bg-gray-50 rounded-lg border border-dashed border-gray-300">
                         <i class="ph ph-clock-countdown text-3xl text-gray-400 mb-2"></i>
                         <p class="text-sm text-gray-600 mb-3 font-semibold">QR Code Expired for Security.</p>
@@ -1387,20 +1277,17 @@
         window.startQRTimer = function(seconds) {
             clearInterval(qrTimerInterval);
             let timeLeft = seconds;
-            
             qrTimerInterval = setInterval(() => {
                 timeLeft--;
                 const countdownEl = document.getElementById('qr-countdown');
                 const timerDisplay = document.getElementById('qr-timer-display');
                 const qrContainer = document.getElementById('qr-image-container');
                 const regenContainer = document.getElementById('qr-regenerate-container');
-
                 if(countdownEl) {
                     let m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
                     let s = (timeLeft % 60).toString().padStart(2, '0');
                     countdownEl.innerText = `${m}:${s}`;
                 }
-
                 if (timeLeft <= 0) {
                     clearInterval(qrTimerInterval);
                     if(timerDisplay) timerDisplay.classList.add('hidden');
@@ -1410,7 +1297,7 @@
             }, 1000);
         };
 
-        // SHARED FUNCTION FOR PDF / RECEIPT GENERATION
+        // Shared function to inject proper dynamic rules into the generated PDF structures
         window.populateReceiptData = function(team) {
             document.getElementById('r-regNo').innerText = team.regNo || team.id;
             document.getElementById('r-date').innerText = new Date(team.timestamp || Date.now()).toLocaleDateString();
@@ -1424,15 +1311,15 @@
             const rp = document.getElementById('r-playersList'); rp.innerHTML = '';
             team.players.forEach((p, i) => rp.innerHTML += `<div><span class="text-gray-500 text-xs">${i+1}.</span> ${getDisplayName(p, team)}</div>`);
 
+            // Apply Server Rules!
             const rulesList = document.getElementById('r2-rules-list'); 
             if(rulesList) {
                 rulesList.innerHTML = '';
-                let combinedRules = ["টুর্ণামেন্ট সব নিয়ম মেনে চলবো", ...(State.settings.rules || ["প্লেড প্লেয়ার খেলা নেই।"])];
+                let combinedRules = ["টুর্ণামেন্ট সব নিয়ম মেনে চলবো", ...(State.settings.rules && State.settings.rules.length > 0 ? State.settings.rules : ["কোনো নিয়মাবলি সেভ করা নেই।"])];
                 combinedRules.forEach((r, i) => {
-                    rulesList.innerHTML += `<li class="mb-2 text-sm font-semibold text-black leading-snug"><span class="mr-2">${i+1}.</span>${r}</li>`;
+                    rulesList.innerHTML += `<li class="mb-2 text-[15px] font-semibold text-black leading-snug"><span class="mr-2">${i+1}.</span>${r}</li>`;
                 });
             }
-
             document.getElementById('r2-teamHead-sign').innerText = team.head;
         };
 
@@ -1482,10 +1369,11 @@
                 const rp = document.getElementById('r-playersList'); rp.innerHTML = '';
                 team.players.forEach((p, i) => rp.innerHTML += `<div><span class="text-gray-500 text-xs">${i+1}.</span> ${getDisplayName(p, team)}</div>`);
                 
+                // Server Rules Injection
                 const rulesEl = document.getElementById('r2-rules-list');
                 if(rulesEl) {
-                    let combinedRules = ["টুর্ণামেন্ট সব নিয়ম মেনে চলবো", ...(State.settings.rules || ["প্লেড প্লেয়ার খেলা নেই।"])];
-                    rulesEl.innerHTML = combinedRules.map((r, i) => `<li class="mb-2 text-sm font-semibold text-black leading-snug"><span class="mr-2">${i+1}.</span>${r}</li>`).join('');
+                    let combinedRules = ["টুর্ণামেন্ট সব নিয়ম মেনে চলবো", ...(State.settings.rules && State.settings.rules.length > 0 ? State.settings.rules : ["কোনো নিয়মাবলি সেভ করা নেই।"])];
+                    rulesEl.innerHTML = combinedRules.map((r, i) => `<li class="mb-2 text-[15px] font-semibold text-black leading-snug"><span class="mr-2">${i+1}.</span>${r}</li>`).join('');
                 }
 
                 document.getElementById('main-header').classList.add('hidden');
@@ -1523,7 +1411,7 @@
             
             setTimeout(() => {
                 const team = State.pendingRegistration;
-                populateReceiptData(team);
+                populateReceiptData(team); // Populates all Rules using Firebase State
                 document.getElementById('r-fee-container').style.display = 'flex';
                 document.getElementById('r-fee').innerText = State.settings.entryFee;
                 document.getElementById('r-fee-words').innerText = numberToWords(State.settings.entryFee);
@@ -1637,10 +1525,11 @@
             const rp = document.getElementById('r-playersList'); rp.innerHTML = '';
             team.players.forEach((p, i) => rp.innerHTML += `<div><span class="text-gray-500 text-xs">${i+1}.</span> ${getDisplayName(p, team)}</div>`);
             
+            // Safe Rules Sync for Admin Print
             const rulesEl = document.getElementById('r2-rules-list');
             if(rulesEl) {
-                let combinedRules = ["টুর্ণামেন্ট সব নিয়ম মেনে চলবো", ...(State.settings.rules || ["প্লেড প্লেয়ার খেলা নেই।"])];
-                rulesEl.innerHTML = combinedRules.map((r, i) => `<li class="mb-2 text-sm font-semibold text-black leading-snug"><span class="mr-2">${i+1}.</span>${r}</li>`).join('');
+                let combinedRules = ["টুর্ণামেন্ট সব নিয়ম মেনে চলবো", ...(State.settings.rules && State.settings.rules.length > 0 ? State.settings.rules : ["কোনো নিয়মাবলি সেভ করা নেই।"])];
+                rulesEl.innerHTML = combinedRules.map((r, i) => `<li class="mb-2 text-[15px] font-semibold text-black leading-snug"><span class="mr-2">${i+1}.</span>${r}</li>`).join('');
             }
 
             document.getElementById('admin-view').classList.add('hidden');
@@ -1655,7 +1544,6 @@
             document.getElementById('edit-teamName').value = team.name; document.getElementById('edit-teamHead').value = team.head;
             document.getElementById('edit-phone').value = team.phone; document.getElementById('edit-address').value = team.address;
             
-            // Map strings back to objects for Editing (Keep original string names but apply hide flags)
             State.formPlayers = team.players.map(p => ({
                 name: p,
                 isHidden: (team.hiddenPlayers || []).includes(p)
@@ -1829,6 +1717,7 @@
             document.getElementById('publicTeamModal').classList.remove('hidden');
         };
 
+        // SCORING SETUP & CORE
         window.jumpToScore = function(matchId) { switchTab('admin', 'score'); document.getElementById('score-match-select').value = matchId; setupMatchContext(); };
         window.resumeScore = function(matchId) {
             if (State.liveMatch && State.liveMatch.matchId === matchId) {
@@ -1980,8 +1869,10 @@
                 finalScore: { score: State.liveMatch.score, wickets: State.liveMatch.wickets, overs: Math.floor(State.liveMatch.balls / 6) + '.' + (State.liveMatch.balls % 6) }
             }));
 
+            if (document.fullscreenElement) { document.exitFullscreen(); }
+
             if (match.stage === 'Final' && winnerId !== 'TIE') {
-                showConfirm(`🏆 TOURNAMENT ENDED! 🏆\n\nWINNER / জয়ী: ${winnerTeam.name}\nRUNNER-UP: ${loserTeam.name}\nMoM: ${mom}`, () => { closeConfirm(); }, true);
+                showConfirm(`🏆 TOURNAMENT ENDED! 🏆\n\nWINNER / জয়ী: ${winnerTeam.name}\nRUNNER-UP: ${loserTeam.name}\nMoM: ${getDisplayName(mom, winnerTeam)}`, () => { closeConfirm(); }, true);
             } else {
                 showToast(`Match Completed! ${marginStr}`);
             }
@@ -2001,7 +1892,9 @@
             document.getElementById('s-team1-name').innerText = match.team1.name;
             document.getElementById('s-team2-name').innerText = match.team2.name;
             document.getElementById('s-result').innerText = match.resultStr || "Match Completed";
-            document.getElementById('s-mom').innerText = match.mom || "N/A";
+            
+            let momTeam = match.team1.players.includes(match.mom) ? match.team1 : match.team2;
+            document.getElementById('s-mom').innerText = match.mom ? getDisplayName(match.mom, momTeam) : "N/A";
             
             document.getElementById('s-t1-head').innerText = match.team1.name;
             document.getElementById('s-t2-head').innerText = match.team2.name;
@@ -2346,16 +2239,30 @@
                 document.getElementById('sc-target-admin-container').innerHTML = targetHtmlAdmin;
             }
 
+            // Also attach fullscreen toggle to Public Live View
             document.getElementById('public-live-scoreboard').innerHTML = `
-                <div class="bg-gray-900 text-white rounded-xl p-6 shadow-2xl relative overflow-hidden">
+                <div class="bg-gray-900 text-white rounded-xl p-6 shadow-2xl relative overflow-hidden flex flex-col h-full w-full">
                     <div class="absolute top-0 left-0 w-full h-1 bg-red-500"></div>
                     <div class="flex justify-between items-center border-b border-gray-700 pb-4 mb-4">
                         <div><span class="flex items-center gap-2 text-red-400 text-xs font-bold uppercase tracking-widest"><span class="animate-pulse h-2 w-2 bg-red-500 rounded-full"></span> Live Sync Active</span></div>
-                        <div class="text-[10px] bg-gray-800 px-2 py-1 rounded uppercase tracking-widest font-bold text-gray-400">${lm.innings === 2 ? '2nd Innings' : '1st Innings'}</div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="toggleFullscreen()" class="text-gray-400 hover:text-white bg-gray-800 px-3 py-1 rounded text-[10px] flex items-center gap-1 transition uppercase tracking-widest font-bold"><i class="ph ph-corners-out"></i> Fullscreen</button>
+                            <div class="text-[10px] bg-gray-800 px-2 py-1 rounded uppercase tracking-widest font-bold text-gray-400">${lm.innings === 2 ? '2nd Innings' : '1st Innings'}</div>
+                        </div>
                     </div>
                     <div class="flex justify-between items-end mb-6"><div><h2 class="text-2xl font-black text-white">${lm.batTeam.name}</h2><div class="text-5xl font-black mt-2 tracking-tighter text-yellow-400">${lm.score}<span class="text-2xl text-gray-400">/${lm.wickets}</span></div><div class="text-sm text-gray-400 mt-1">Overs: <span class="font-bold text-white">${oversStr}</span> <span class="text-gray-600">/ ${lm.totalOvers}</span> &nbsp;&bull;&nbsp; <span class="text-yellow-400 font-bold">Extras: ${lm.extras || 0}</span></div></div><div class="text-right"><h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Bowling</h3><div class="font-bold text-lg">${lm.bowlTeam.name}</div><div class="text-sm text-emerald-400 mt-1">${getDisplayName(lm.bowler.name, lm.bowlTeam) || 'Next Bowler'} (${Math.floor(lm.bowler.balls/6)}.${lm.bowler.balls%6} Ov)</div></div></div>
                     ${targetHtmlPublic}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-700 pt-4 mt-4"><div class="bg-white/5 p-3 rounded"><div class="text-xs text-gray-400 mb-2 uppercase font-bold tracking-widest">Batting</div><div class="font-bold flex justify-between text-sm mb-1 ${lm.striker.name ? 'text-white' : 'text-gray-600'}"><span>${getDisplayName(lm.striker.name, lm.batTeam) || 'Striker'} *</span> <span>${lm.striker.runs}(${lm.striker.balls})</span></div><div class="font-bold flex justify-between text-sm ${lm.runner.name ? 'text-gray-300' : 'text-gray-600'}"><span>${getDisplayName(lm.runner.name, lm.batTeam) || 'Runner'}</span> <span>${lm.runner.runs}(${lm.runner.balls})</span></div></div><div class="bg-white/5 p-3 rounded flex flex-col justify-center"><div class="text-xs text-gray-400 mb-2 uppercase font-bold tracking-widest">This Over</div><div class="flex gap-1 flex-wrap text-sm">${lm.currentOver.length > 0 ? lm.currentOver.join('') : '<span class="text-gray-600">.</span>'}</div></div></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-gray-700 pt-4 mt-4 flex-1">
+                        <div class="bg-white/5 p-3 rounded">
+                            <div class="text-xs text-gray-400 mb-2 uppercase font-bold tracking-widest">Batting</div>
+                            <div class="font-bold flex justify-between text-sm mb-1 ${lm.striker.name ? 'text-white' : 'text-gray-600'}"><span>${getDisplayName(lm.striker.name, lm.batTeam) || 'Striker'} *</span> <span>${lm.striker.runs}(${lm.striker.balls})</span></div>
+                            <div class="font-bold flex justify-between text-sm ${lm.runner.name ? 'text-gray-300' : 'text-gray-600'}"><span>${getDisplayName(lm.runner.name, lm.batTeam) || 'Runner'}</span> <span>${lm.runner.runs}(${lm.runner.balls})</span></div>
+                        </div>
+                        <div class="bg-white/5 p-3 rounded flex flex-col justify-center">
+                            <div class="text-xs text-gray-400 mb-2 uppercase font-bold tracking-widest">This Over</div>
+                            <div class="flex gap-1 flex-wrap text-sm">${lm.currentOver.length > 0 ? lm.currentOver.join('') : '<span class="text-gray-600">.</span>'}</div>
+                        </div>
+                    </div>
                 </div>`;
         }
 
@@ -2459,6 +2366,8 @@
             
             document.body.classList.remove('theme-violet');
             document.body.classList.add('theme-premium');
+            
+            if (document.fullscreenElement) document.exitFullscreen();
             
             showToast("Logged out"); 
         };
@@ -2612,8 +2521,8 @@
             if(!team) return;
             showToast("Generating Rules PDF...");
 
-            // Exact rules from admin settings
-            let combinedRules = ["টুর্ণামেন্ট সব নিয়ম মেনে চলবো", ...(State.settings.rules || ["প্লেড প্লেয়ার খেলা নেই।"])];
+            // Exact rules from admin settings (Firebase synchronized)
+            let combinedRules = ["টুর্ণামেন্ট সব নিয়ম মেনে চলবো", ...(State.settings.rules && State.settings.rules.length > 0 ? State.settings.rules : ["কোনো নিয়মাবলি সেভ করা নেই।"])];
             const rulesHtml = combinedRules.map((r, i) => `<li class="mb-2"><span class="mr-2">${i+1}.</span>${r}</li>`).join('');
 
             const container = document.createElement('div');
@@ -2670,39 +2579,28 @@
             });
         };
         
-        window.downloadRulesPDF = function(btnElement) {
-            const element = document.querySelector('#rules-pdf-content');
-            const originalText = btnElement.innerHTML;
-            
-            const rulesText = State.settings.rules || "কোনো নিয়মাবলি সেট করা হয়নি।";
-            document.getElementById('r-dynamic-rules').innerText = rulesText;
-            
-            btnElement.innerHTML = '<i class="ph ph-spinner animate-spin"></i> Downloading...';
-            btnElement.disabled = true;
-
-            const opt = {
-                margin:       0,
-                filename:     `Tournament_Rules.pdf`,
-                image:        { type: 'jpeg', quality: 1 },
-                html2canvas:  { scale: 3, useCORS: true }, 
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            const rulesView = document.getElementById('rules-pdf-view');
-            rulesView.classList.remove('hidden');
-            rulesView.style.position = 'absolute';
-            rulesView.style.left = '-9999px';
-
-            html2pdf().set(opt).from(element).save().then(() => {
-                rulesView.classList.add('hidden');
-                rulesView.style.position = '';
-                rulesView.style.left = '';
-                btnElement.innerHTML = originalText;
-                btnElement.disabled = false;
-                showToast("Rules PDF Downloaded Successfully!");
-            });
+        window.formatToDDMMYYYY = function(timestamp) {
+            const d = timestamp ? new Date(timestamp) : new Date();
+            return d.getDate().toString().padStart(2, '0') + '/' + 
+                   (d.getMonth() + 1).toString().padStart(2, '0') + '/' + 
+                   d.getFullYear();
         };
 
+        window.numberToWords = function(num) {
+            if(num === 0) return 'Zero Only';
+            const a = ['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
+            const b = ['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
+            if ((num = num.toString()).length > 9) return 'Overflow';
+            let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+            if (!n) return ''; let str = '';
+            str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
+            str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
+            str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
+            str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
+            str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + 'Only' : 'Only';
+            return str.trim();
+        };
+        
         window.renderBowlerRules = function() {
             const container = document.getElementById('bowler-rules-container');
             if(!container) return;
@@ -2764,31 +2662,6 @@
             State.settings.bowlerRules[index][field] = value;
             renderBowlerRules();
         };
-        
-        function showLocationRequiredOverlay() {
-            if (document.getElementById('location-lock-overlay')) return;
-            const overlay = document.createElement('div');
-            overlay.id = 'location-lock-overlay';
-            overlay.className = 'fixed inset-0 bg-slate-900 bg-opacity-95 z-[9999] flex flex-col items-center justify-center p-4 text-center text-white';
-            overlay.innerHTML = `
-                <div class="bg-white text-slate-800 p-6 rounded-2xl max-w-sm w-full shadow-2xl space-y-4">
-                    <div class="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto text-3xl">
-                        <i class="ph ph-map-pin-line animate-bounce"></i>
-                    </div>
-                    <h2 class="text-xl font-bold text-slate-900">লোকেশন পারমিশন আবশ্যক!</h2>
-                    <p class="text-sm text-slate-600">ম্যাচ পরিচালনা বা লাইভ পোর্টাল ব্যবহারের জন্য আপনার সঠিক জিপিএস লোকেশন প্রয়োজন। দয়া করে পারমিশন 'Allow' করুন।</p>
-                    <button onclick="forceCollectLocation()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-medium py-2.5 px-4 rounded-xl transition duration-200">
-                        আবার চেষ্টা করুন
-                    </button>
-                </div>
-            `;
-            document.body.appendChild(overlay);
-        }
-
-        function removeLocationOverlay() {
-            const overlay = document.getElementById('location-lock-overlay');
-            if (overlay) overlay.remove();
-        }
     </script>
 </body>
 </html>
